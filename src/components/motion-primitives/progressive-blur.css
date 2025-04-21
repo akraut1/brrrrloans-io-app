@@ -1,0 +1,25 @@
+.progressive-blur {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 5rem;
+  pointer-events: none;
+}
+
+.progressive-blur-left {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgb(255 255 255 / var(--blur-intensity)) 0%,
+    transparent 100%
+  );
+}
+
+.progressive-blur-right {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgb(255 255 255 / var(--blur-intensity)) 0%,
+    transparent 100%
+  );
+}

@@ -1,18 +1,19 @@
-import React from 'react';
-import { ClerkProvider } from '@clerk/nextjs'
-import './globals.css'
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { ThemeProvider } from "../components/theme/theme-provider.tsx"
-import { ThemeHeader } from "../components/theme/ThemeHeader.tsx"
-import { AuthRedirect } from "../components/auth-redirect.tsx"
+import React from "react";
+import { ClerkProvider } from "@clerk/nextjs";
+import "./globals.css";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { ThemeHeader } from "@/components/theme/theme-header";
+import { AuthRedirect } from "@/components/auth-redirect";
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'BRRRR',
-  description: 'BRRRR - Your Real Estate Investment Platform',
-}
+  title: "Brrrr Loans OS",
+  description:
+    "Open Source, Enterprise Grade Infrastructure for Business Purpose Lending at Scale",
+};
 
 // Create input type handler script as a string
 const inputTypeHandlerScript = `
@@ -55,16 +56,16 @@ const inputTypeHandlerScript = `
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <head>
           {/* Add inline script to handle input type detection after hydration */}
-          <script 
+          <script
             dangerouslySetInnerHTML={{
-              __html: inputTypeHandlerScript
+              __html: inputTypeHandlerScript,
             }}
           />
         </head>
@@ -85,5 +86,5 @@ export default function RootLayout({
         </body>
       </html>
     </ClerkProvider>
-  )
+  );
 }

@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import React from "react"
-import { usePathname } from "next/navigation"
-import { Button } from "../ui/button.tsx"
-import { ScrollArea } from "../ui/scroll-area.tsx"
-import { 
-  LayoutDashboard, 
-  Settings, 
-  Users, 
-  FileText, 
+import React from "react";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  LayoutDashboard,
+  Settings,
+  Users,
+  FileText,
   BarChart3,
-  Bell
-} from "lucide-react"
+  Bell,
+} from "lucide-react";
 
 const items = [
   {
@@ -44,10 +44,10 @@ const items = [
     href: "/dashboard/settings",
     icon: Settings,
   },
-]
+];
 
 export function DashboardNav() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <nav className="grid items-start gap-2">
@@ -79,5 +79,5 @@ export function DashboardNav() {
         </div>
       </ScrollArea>
     </nav>
-  )
-} 
+  );
+}
