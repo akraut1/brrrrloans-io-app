@@ -1,8 +1,12 @@
-"use client";
+import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 
-import React from "react";
-import Hero85 from "@/components/hero-85";
+export default async function Home() {
+  const { userId } = await auth();
 
-export default function Home() {
-  return <Hero85 />;
+  if (userId) {
+    redirect("/dashboard");
+  }
+
+  redirect("/auth/sign-in");
 }

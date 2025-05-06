@@ -1,13 +1,25 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      'shadcnblocks.com',
-      'api.app.brrrrloans.com',
-      'assets.vercel.com',
-      'supabase.com'
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "shadcnblocks.com",
+      },
+      {
+        protocol: "https",
+        hostname: "api.app.brrrrloans.com",
+      },
+      {
+        protocol: "https",
+        hostname: "assets.vercel.com",
+      },
+      {
+        protocol: "https",
+        hostname: "supabase.com",
+      },
     ],
   },
-}
+};
 
-module.exports = nextConfig; 
+module.exports = nextConfig;

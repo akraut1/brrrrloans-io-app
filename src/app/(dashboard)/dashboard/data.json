@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "header": "Example Deal 1",
+    "type": "Investment",
+    "status": "Active",
+    "target": "$1M",
+    "limit": "$2M",
+    "reviewer": "John Doe"
+  },
+  {
+    "id": 2,
+    "header": "Example Deal 2",
+    "type": "Loan",
+    "status": "Pending",
+    "target": "$500K",
+    "limit": "$1M",
+    "reviewer": "Jane Smith"
+  }
+]

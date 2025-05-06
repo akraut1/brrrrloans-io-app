@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import EmblaCarousel from "embla-carousel";
 import AutoScroll from "embla-carousel-auto-scroll";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton } from "@/components/auth/clerk-components";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
