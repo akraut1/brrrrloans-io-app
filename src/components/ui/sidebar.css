@@ -1,0 +1,21 @@
+:root {
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 3rem;
+  --sidebar-width-mobile: 18rem;
+}
+
+/* You can scope these to a class if you want, e.g., .sidebar-root */
+
+/* stylelint-disable-next-line selector-class-pattern */
+.group-sidebar-wrapper {
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 3rem;
+}
+
+@media (width <= 768px) {
+  .sidebar-mobile {
+    --sidebar-width: 18rem;
+  }
+}
+
+/* For skeleton width, you can use an inline style for the random value, or use a class if you want fixed widths. */

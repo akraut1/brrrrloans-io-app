@@ -34,14 +34,14 @@ interface FileData {
 
 interface UploadDocumentDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  handleOpenChangeAction: (open: boolean) => void;
   deals: { id: string; name: string }[];
   onUploadComplete?: () => void;
 }
 
 export function UploadDocumentDialog({
   open,
-  onOpenChange,
+  handleOpenChangeAction,
   deals,
   onUploadComplete,
 }: UploadDocumentDialogProps) {
@@ -88,7 +88,7 @@ export function UploadDocumentDialog({
       if (dbError) throw dbError;
 
       // Close dialog and refresh
-      onOpenChange(false);
+      handleOpenChangeAction(false);
       if (onUploadComplete) {
         onUploadComplete();
       }
@@ -106,7 +106,7 @@ export function UploadDocumentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChangeAction}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Upload Document</DialogTitle>
@@ -181,7 +181,10 @@ export function UploadDocumentDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => handleOpenChangeAction(false)}
+          >
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={uploading}>

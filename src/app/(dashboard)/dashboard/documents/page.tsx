@@ -288,7 +288,7 @@ export default function DocumentsPage() {
 
       <UploadDocumentDialog
         open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
+        handleOpenChangeAction={setUploadDialogOpen}
         deals={deals}
         onUploadComplete={fetchDocuments}
       />
