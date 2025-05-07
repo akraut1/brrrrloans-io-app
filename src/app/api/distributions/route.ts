@@ -10,56 +10,63 @@ export async function GET(request: Request) {
     }
 
     const supabase = await getSupabaseClient();
+
+    // Map Clerk userId to contact_id (investor_id) using user_profile
+    const { data: profile, error: profileError } = await supabase
+      .from("user_profile")
+      .select("contact_id")
+      .eq("clerk_id", userId)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: "User profile not found" },
+        { status: 404 }
+      );
+    }
+
+    const investorId = profile.contact_id;
+
+    if (!investorId) {
+      return NextResponse.json(
+        { error: "Investor ID not found for this user" },
+        { status: 404 }
+      );
+    }
+
     const url = new URL(request.url);
     const searchParams = url.searchParams;
     const status = searchParams.get("status");
     const type = searchParams.get("type");
     const search = searchParams.get("search");
-    const period = searchParams.get("period") || "all"; // time period filter
+    const period = searchParams.get("period") || "all";
 
-    // Get distributions for this investor
+    // Query distributions for this investor
     let query = supabase
-      .from("bs_investor_distribution_details")
+      .from("bs_investor_distributions")
       .select(
         `
         *,
-        bs_investor_distribution_payments!inner(contact_id),
-        deal:deal_id(name)
+        deal:deal_id(deal_name)
       `
       )
-      .eq("bs_investor_distribution_payments.contact_id", userId);
+      .eq("investor_id", investorId);
 
-    // Apply time period filter
+    // Apply filters
     if (period !== "all") {
       const now = new Date();
       const startDate = new Date();
-
-      if (period === "3m") {
-        startDate.setMonth(now.getMonth() - 3);
-      } else if (period === "6m") {
-        startDate.setMonth(now.getMonth() - 6);
-      } else if (period === "1y") {
-        startDate.setFullYear(now.getFullYear() - 1);
-      }
-
-      query = query.gte("distribution_date", startDate.toISOString());
+      if (period === "3m") startDate.setMonth(now.getMonth() - 3);
+      else if (period === "6m") startDate.setMonth(now.getMonth() - 6);
+      else if (period === "1y") startDate.setFullYear(now.getFullYear() - 1);
+      query = query.gte("created_at", startDate.toISOString());
     }
+    if (status) query = query.eq("status", status);
+    if (type) query = query.eq("distribution_type", type);
+    if (search)
+      query = query.or(`id.ilike.%${search}%,deal.deal_name.ilike.%${search}%`);
 
-    // Apply other filters
-    if (status) {
-      query = query.eq("status", status);
-    }
-
-    if (type) {
-      query = query.eq("distribution_type", type);
-    }
-
-    if (search) {
-      query = query.or(`id.ilike.%${search}%,deal.name.ilike.%${search}%`);
-    }
-
-    // Order by date descending (newest first)
-    query = query.order("distribution_date", { ascending: false });
+    query = query.order("created_at", { ascending: false });
 
     const { data, error } = await query;
 

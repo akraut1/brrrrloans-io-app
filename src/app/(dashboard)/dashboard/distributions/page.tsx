@@ -53,7 +53,7 @@ export default function DistributionsPage() {
       <SiteHeader />
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-medium tracking-tight">Distributions</h2>
+          <h1 className="text-2xl font-bold tracking-tight">Distributions</h1>
           <div className="flex gap-2">
             <Button variant="outline">
               <Download className="mr-2 h-4 w-4" />
