@@ -1,11 +1,34 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Bar, BarChart } from "recharts"
-import { DollarSign, Calendar } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Bar,
+  BarChart,
+} from "recharts";
+import { DollarSign, Calendar } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Sample data - in a real app, this would come from your Supabase database
 const monthlyDistributionData = [
@@ -17,25 +40,25 @@ const monthlyDistributionData = [
   { month: "Jun", amount: 21250 },
   { month: "Jul", amount: 21250 },
   { month: "Aug", amount: 21250 },
-]
+];
 
 const quarterlyDistributionData = [
   { quarter: "Q1", amount: 45000 },
   { quarter: "Q2", amount: 63750 },
   { quarter: "Q3", amount: 42500 },
-]
+];
 
 const yearlyDistributionData = [
   { year: "2022", amount: 120000 },
   { year: "2023", amount: 150000 },
   { year: "2024", amount: 151250 },
-]
+];
 
 interface InvestorSummaryWidgetProps {
-  totalOutstandingBalance: number
-  totalDistributionsPaid: number
-  nextDistributionDate: string
-  nextDistributionAmount: number
+  totalOutstandingBalance: number;
+  totalDistributionsPaid: number;
+  nextDistributionDate: string;
+  nextDistributionAmount: number;
 }
 
 export function InvestorSummaryWidget({
@@ -44,7 +67,7 @@ export function InvestorSummaryWidget({
   nextDistributionDate = "2024-05-15",
   nextDistributionAmount = 15000,
 }: InvestorSummaryWidgetProps) {
-  const [timeFilter, setTimeFilter] = useState("6m") // Default to 6 months
+  const [timeFilter, setTimeFilter] = useState("6m"); // Default to 6 months
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -53,38 +76,45 @@ export function InvestorSummaryWidget({
       currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(value)
-  }
+    }).format(value);
+  };
 
   // Get filtered distribution data based on time period
   const getFilteredDistributionTotal = () => {
     switch (timeFilter) {
       case "3m":
-        return monthlyDistributionData.slice(-3).reduce((sum, item) => sum + item.amount, 0)
+        return monthlyDistributionData
+          .slice(-3)
+          .reduce((sum, item) => sum + item.amount, 0);
       case "6m":
-        return monthlyDistributionData.slice(-6).reduce((sum, item) => sum + item.amount, 0)
+        return monthlyDistributionData
+          .slice(-6)
+          .reduce((sum, item) => sum + item.amount, 0);
       case "1y":
-        return monthlyDistributionData.reduce((sum, item) => sum + item.amount, 0)
+        return monthlyDistributionData.reduce(
+          (sum, item) => sum + item.amount,
+          0
+        );
       case "all":
       default:
-        return totalDistributionsPaid
+        return totalDistributionsPaid;
     }
-  }
+  };
 
   // Get chart data based on time period
   const getChartData = () => {
     switch (timeFilter) {
       case "3m":
       case "6m":
-        const sliceCount = timeFilter === "3m" ? 3 : 6
-        return monthlyDistributionData.slice(-sliceCount)
+        const sliceCount = timeFilter === "3m" ? 3 : 6;
+        return monthlyDistributionData.slice(-sliceCount);
       case "1y":
-        return monthlyDistributionData
+        return monthlyDistributionData;
       case "all":
       default:
-        return yearlyDistributionData
+        return yearlyDistributionData;
     }
-  }
+  };
 
   // Get x-axis data key based on time period
   const getDataKey = () => {
@@ -92,12 +122,12 @@ export function InvestorSummaryWidget({
       case "3m":
       case "6m":
       case "1y":
-        return "month"
+        return "month";
       case "all":
       default:
-        return "year"
+        return "year";
     }
-  }
+  };
 
   return (
     <div className="grid gap-6 md:grid-cols-2 mb-6">
@@ -110,8 +140,12 @@ export function InvestorSummaryWidget({
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-4xl font-bold">{formatCurrency(totalOutstandingBalance)}</div>
-              <p className="text-sm text-muted-foreground mt-2">Across all active investments</p>
+              <div className="text-4xl font-bold">
+                {formatCurrency(totalOutstandingBalance)}
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Across all active investments
+              </p>
             </div>
             <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
               <DollarSign className="h-8 w-8 text-primary" />
@@ -121,11 +155,15 @@ export function InvestorSummaryWidget({
           <div className="mt-6 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span>Next Distribution:</span>
-              <span className="font-medium">{new Date(nextDistributionDate).toLocaleDateString()}</span>
+              <span className="font-medium">
+                {new Date(nextDistributionDate).toLocaleDateString()}
+              </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span>Amount:</span>
-              <span className="font-medium">{formatCurrency(nextDistributionAmount)}</span>
+              <span className="font-medium">
+                {formatCurrency(nextDistributionAmount)}
+              </span>
             </div>
           </div>
         </CardContent>
@@ -153,9 +191,13 @@ export function InvestorSummaryWidget({
         <CardContent>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <div className="text-4xl font-bold">{formatCurrency(getFilteredDistributionTotal())}</div>
+              <div className="text-4xl font-bold">
+                {formatCurrency(getFilteredDistributionTotal())}
+              </div>
               <p className="text-sm text-muted-foreground mt-2">
-                {timeFilter === "all" ? "Total distributions received" : `Distributions in selected period`}
+                {timeFilter === "all"
+                  ? "Total distributions received"
+                  : `Distributions in selected period`}
               </p>
             </div>
             <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -163,7 +205,7 @@ export function InvestorSummaryWidget({
             </div>
           </div>
 
-          <div className="h-[200px]">
+          <div className="w-full aspect-video">
             <ChartContainer
               config={{
                 amount: {
@@ -173,7 +215,10 @@ export function InvestorSummaryWidget({
               }}
             >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={getChartData()} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                <BarChart
+                  data={getChartData()}
+                  margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey={getDataKey()} />
                   <YAxis
@@ -187,7 +232,11 @@ export function InvestorSummaryWidget({
                     }
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="amount" fill="var(--color-amount)" name="Distribution Amount" />
+                  <Bar
+                    dataKey="amount"
+                    fill="var(--color-amount)"
+                    name="Distribution Amount"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -195,5 +244,5 @@ export function InvestorSummaryWidget({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

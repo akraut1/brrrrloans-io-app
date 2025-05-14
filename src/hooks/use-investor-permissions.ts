@@ -26,7 +26,7 @@ export function useInvestorPermissions(): InvestorPermissions {
     const { data, error } = await supabase
       .from("bs_investor_deals")
       .select("deal_id")
-      .eq("deal_id", dealId)
+      .eq("deal_id", Number(dealId))
       .single();
 
     const hasAccess = !error;
@@ -40,10 +40,16 @@ export function useInvestorPermissions(): InvestorPermissions {
       return permissionCache.get(cacheKey)!;
     }
 
+    const idNum = Number(documentId);
+    if (Number.isNaN(idNum)) {
+      permissionCache.set(cacheKey, false);
+      return false;
+    }
+
     const { data, error } = await supabase
-      .from("documents")
+      .from("document_files")
       .select("id")
-      .eq("id", documentId)
+      .eq("id", idNum)
       .single();
 
     const hasAccess = !error;
@@ -60,12 +66,13 @@ export function useInvestorPermissions(): InvestorPermissions {
     }
 
     const { data, error } = await supabase
-      .from("bs_investor_contributions")
-      .select("id")
-      .eq("id", contributionId)
+      .from("bs_investor_transactions")
+      .select("id, ledger_entry_type")
+      .eq("id", Number(contributionId))
+      .eq("ledger_entry_type", "contribution")
       .single();
 
-    const hasAccess = !error;
+    const hasAccess = !error && data?.ledger_entry_type === "contribution";
     permissionCache.set(cacheKey, hasAccess);
     return hasAccess;
   };
@@ -79,12 +86,13 @@ export function useInvestorPermissions(): InvestorPermissions {
     }
 
     const { data, error } = await supabase
-      .from("bs_investor_distribution_payments")
-      .select("id")
-      .eq("id", distributionId)
+      .from("bs_investor_transactions")
+      .select("id, ledger_entry_type")
+      .eq("id", Number(distributionId))
+      .eq("ledger_entry_type", "interest")
       .single();
 
-    const hasAccess = !error;
+    const hasAccess = !error && data?.ledger_entry_type === "interest";
     permissionCache.set(cacheKey, hasAccess);
     return hasAccess;
   };

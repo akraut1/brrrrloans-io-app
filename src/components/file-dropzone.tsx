@@ -79,12 +79,12 @@ export function FileDropzone({
 
       // Create file data object similar to the old implementation
       const fileData: FileData = {
-          name: file.name,
-          size: file.size,
-          type: file.type,
+        name: file.name,
+        size: file.size,
+        type: file.type,
         path: `${folderPath}/${file.name}`,
         url: fileUrl,
-          uploadedAt: new Date().toISOString(),
+        uploadedAt: new Date().toISOString(),
       };
 
       // Call the callback

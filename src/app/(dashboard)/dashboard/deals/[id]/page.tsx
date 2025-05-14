@@ -20,7 +20,7 @@ export default async function DealPage({ params }: PageProps) {
   const { data: deal, error } = await supabase
     .from("deal")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", parseInt(params.id))
     .single();
 
   if (error || !deal) {

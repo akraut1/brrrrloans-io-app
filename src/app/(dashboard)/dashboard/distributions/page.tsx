@@ -33,6 +33,7 @@ import { Download, Plus } from "lucide-react";
 import { InvestorSummaryWidget } from "@/components/distributions/investor-summary-widget";
 import { useDistributions } from "@/hooks/use-distributions";
 import { useInvestorSummary } from "@/hooks/use-investor-summary";
+import type { Tables } from "@/types/supabase";
 
 export default function DistributionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,10 +43,35 @@ export default function DistributionsPage() {
 
   // Use custom hooks to fetch data
   const { summary, loading: summaryLoading } = useInvestorSummary();
-  const { distributions, loading: distributionsLoading } = useDistributions({
-    status: selectedTab !== "all" ? selectedTab : undefined,
-    type: selectedType !== "all" ? selectedType : undefined,
-    search: searchTerm || undefined,
+  const { distributions: rawDistributions, loading: distributionsLoading } =
+    useDistributions({
+      status: selectedTab !== "all" ? selectedTab : undefined,
+      type: selectedType !== "all" ? selectedType : undefined,
+      search: searchTerm || undefined,
+    });
+
+  // The API returns: (Tables<"bs_investor_distributions"> & { deal: Pick<Tables<"deal">, "deal_name"> })[]
+  // Map to a UI-friendly shape
+  const distributions: Array<{
+    id: string;
+    dealName: string;
+    type: string;
+    amount: string;
+    date: string;
+    status: string;
+    raw: any;
+  }> = (rawDistributions || []).map((d) => {
+    const dealName =
+      (d as { deal?: { deal_name?: string } }).deal?.deal_name ?? "";
+    return {
+      id: d.id,
+      dealName,
+      type: "", // Add mapping if you have a type field
+      amount: d.deposit_amount?.toString() ?? "",
+      date: d.created_at ?? "",
+      status: "", // Add mapping if you have a status field
+      raw: d,
+    };
   });
 
   return (

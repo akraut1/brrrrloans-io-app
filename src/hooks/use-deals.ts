@@ -2,19 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import type { Tables } from "@/types/supabase";
 
-export interface Deal {
-  id: string;
-  name: string;
-  type: string;
-  amount: string;
-  status: string;
-  roi: string;
-  date: string;
-  location: string;
-  investors: number;
-  // Add any other fields your API returns
-}
+type Deal = Tables<"deal">;
 
 export interface UseDealsOptions {
   status?: string;

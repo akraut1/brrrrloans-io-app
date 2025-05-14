@@ -50,13 +50,25 @@ function UnprotectedDistributionsList({ dealId }: DistributionsListProps) {
         .order("distribution_date", { ascending: false });
 
       if (dealId) {
-        query = query.eq("deal_id", dealId);
+        query = query.eq("deal_id", Number(dealId));
       }
 
       const { data, error } = await query;
 
       if (!error && data) {
-        setDistributions(data);
+        // Map Supabase data to Distribution interface
+        const mapped = data.map((dist: any) => ({
+          id: dist.id,
+          total_payment_amount: String(dist.total_payment_amount ?? 0),
+          distribution_date: dist.distribution_date ?? "",
+          status: dist.status ?? "",
+          distribution_type: dist.distribution_type ?? "",
+          deal:
+            dist.deal && typeof dist.deal === "object"
+              ? { name: dist.deal.name ?? "" }
+              : null,
+        }));
+        setDistributions(mapped);
       }
       setLoading(false);
     }

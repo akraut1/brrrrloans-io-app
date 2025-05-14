@@ -39,6 +39,7 @@ import {
 import { Eye, Download, Plus } from "lucide-react";
 import { DealDetails } from "@/components/deals/deal-details";
 import { useDeals } from "@/hooks/use-deals";
+import type { Tables } from "@/types/supabase";
 
 export default function DealsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,10 +48,44 @@ export default function DealsPage() {
   const router = useRouter();
 
   // Use the custom hook to fetch deals
-  const { deals, loading, error } = useDeals({
+  const {
+    deals: rawDeals,
+    loading,
+    error,
+  } = useDeals({
     type: selectedType !== "all" ? selectedType : undefined,
     status: selectedStatus !== "all-status" ? selectedStatus : undefined,
     search: searchTerm || undefined,
+  });
+
+  // The API returns: (Tables<"bs_investor_deals"> & { deal?: Tables<"deal"> })[]
+  // Map to a UI-friendly shape
+  const deals: Array<{
+    id: string | number;
+    name: string;
+    type: string;
+    amount: string;
+    roi: string;
+    date: string;
+    location: string;
+    investors: number;
+    status: string;
+    raw: any;
+  }> = (rawDeals || []).map((d) => {
+    const dealObj =
+      (d as { deal?: Tables<"deal">; deal_id?: number | string })?.deal ?? d;
+    return {
+      id: dealObj.id ?? "",
+      name: dealObj.deal_name ?? "",
+      type: dealObj.deal_type ?? "",
+      amount: dealObj.loan_amount_total?.toString() ?? "",
+      roi: dealObj.note_rate?.toString() ?? "",
+      date: dealObj.created_at ?? "",
+      location: dealObj.property_id?.toString() ?? "",
+      investors: 1, // Placeholder, update if you have investor count
+      status: dealObj.deal_disposition_1 ?? "",
+      raw: d,
+    };
   });
 
   return (
@@ -178,7 +213,7 @@ export default function DealsPage() {
                                   investment deal
                                 </DialogDescription>
                               </DialogHeader>
-                              <DealDetails deal={deal} />
+                              <DealDetails deal={deal.raw} />
                             </DialogContent>
                           </Dialog>
                         </TableCell>

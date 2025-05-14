@@ -18,13 +18,9 @@ import { useRouter } from "next/navigation";
 import type { Database } from "@/types/supabase";
 
 interface Deal {
-  id: string;
-  name: string;
-  status: string;
-  investment_amount: string;
-  investment_date: string;
-  last_distribution_date: string | null;
-  last_distribution_amount: string | null;
+  id: number;
+  deal_name: string | null;
+  // Add more fields from the deal table as needed
 }
 
 function UnprotectedActiveDealsList() {
@@ -35,71 +31,42 @@ function UnprotectedActiveDealsList() {
 
   useEffect(() => {
     async function fetchDeals() {
-      const { data, error } = await supabase
+      // First, get all deal_ids for this investor
+      const { data: investorDeals, error: investorDealsError } = await supabase
         .from("bs_investor_deals")
-        .select(
-          `
-          deal_id,
-          investment_amount,
-          investment_date,
-          deal:deal_id (
-            id,
-            name,
-            status
-          ),
-          distributions:bs_investor_distributions (
-            distribution_date,
-            total_payment_amount
-          )
-        `
-        )
-        .eq("status", "Active")
-        .order("investment_date", { ascending: false });
+        .select("deal_id");
 
-      if (!error && data) {
-        const formattedDeals = data.map((item) => {
-          // Sort distributions by date to get the latest
-          const sortedDistributions = item.distributions?.sort(
-            (a, b) =>
-              new Date(b.distribution_date).getTime() -
-              new Date(a.distribution_date).getTime()
-          );
-
-          return {
-            id: item.deal?.id || "",
-            name: item.deal?.name || "",
-            status: item.deal?.status || "",
-            investment_amount: item.investment_amount,
-            investment_date: item.investment_date,
-            last_distribution_date:
-              sortedDistributions?.[0]?.distribution_date || null,
-            last_distribution_amount:
-              sortedDistributions?.[0]?.total_payment_amount || null,
-          };
-        });
-
-        setDeals(formattedDeals);
+      if (investorDealsError || !investorDeals) {
+        setDeals([]);
+        setLoading(false);
+        return;
       }
+
+      const dealIds = investorDeals.map((d) => d.deal_id);
+      if (dealIds.length === 0) {
+        setDeals([]);
+        setLoading(false);
+        return;
+      }
+
+      // Now, fetch deal details for these deal_ids
+      const { data: dealsData, error: dealsError } = await supabase
+        .from("deal")
+        .select("id, deal_name")
+        .in("id", dealIds);
+
+      if (dealsError || !dealsData) {
+        setDeals([]);
+        setLoading(false);
+        return;
+      }
+
+      setDeals(dealsData);
       setLoading(false);
     }
 
     fetchDeals();
   }, []);
-
-  const formatCurrency = (value: string | null) => {
-    if (!value) return "-";
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(Number(value));
-  };
-
-  const formatDate = (date: string | null) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleDateString();
-  };
 
   if (loading) {
     return <div>Loading active deals...</div>;
@@ -115,27 +82,17 @@ function UnprotectedActiveDealsList() {
           <TableHeader>
             <TableRow>
               <TableHead>Deal Name</TableHead>
-              <TableHead>Investment</TableHead>
-              <TableHead>Investment Date</TableHead>
-              <TableHead>Last Distribution</TableHead>
-              <TableHead>Last Distribution Date</TableHead>
-              <TableHead>Status</TableHead>
+              {/* Add more columns as needed */}
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {deals.map((deal) => (
               <TableRow key={deal.id}>
-                <TableCell className="font-medium">{deal.name}</TableCell>
-                <TableCell>{formatCurrency(deal.investment_amount)}</TableCell>
-                <TableCell>{formatDate(deal.investment_date)}</TableCell>
-                <TableCell>
-                  {formatCurrency(deal.last_distribution_amount)}
+                <TableCell className="font-medium">
+                  {deal.deal_name ?? ""}
                 </TableCell>
-                <TableCell>{formatDate(deal.last_distribution_date)}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{deal.status}</Badge>
-                </TableCell>
+                {/* Add more cells as needed */}
                 <TableCell>
                   <Button
                     variant="ghost"
@@ -149,7 +106,7 @@ function UnprotectedActiveDealsList() {
             ))}
             {deals.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
+                <TableCell colSpan={2} className="text-center">
                   No active deals found
                 </TableCell>
               </TableRow>

@@ -1,25 +1,32 @@
 "use server";
 
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase-server";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 export async function createDeal(formData: FormData) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
   }
 
-  const name = formData.get("name") as string;
-  const type = formData.get("type") as string;
-  const amount = formData.get("amount") as string;
-  const location = formData.get("location") as string;
-  const description = formData.get("description") as string;
-  const roi = formData.get("roi") as string;
-  const startDate = formData.get("startDate") as string;
-  const status = (formData.get("status") as string) || "Active";
+  const name = formData.get("name");
+  const type = formData.get("type");
+  const amount = formData.get("amount");
+  const location = formData.get("location");
+  const description = formData.get("description");
+  const roi = formData.get("roi");
+  const startDate = formData.get("startDate");
+  const status = formData.get("status") ?? "Active";
 
-  if (!name || !type || !amount || !location || !roi || !startDate) {
+  if (
+    typeof name !== "string" ||
+    typeof type !== "string" ||
+    typeof amount !== "string" ||
+    typeof location !== "string" ||
+    typeof roi !== "string" ||
+    typeof startDate !== "string"
+  ) {
     throw new Error("Missing required fields");
   }
 
@@ -34,8 +41,7 @@ export async function createDeal(formData: FormData) {
 
     // Insert deal record
     const { error } = await supabase.from("deal").insert({
-      id: dealId,
-      name,
+      deal_name: name,
       type,
       amount: cleanAmount,
       location,
@@ -43,7 +49,6 @@ export async function createDeal(formData: FormData) {
       roi,
       start_date: startDate,
       status,
-      created_by: userId,
       created_at: new Date().toISOString(),
     });
 
@@ -52,14 +57,12 @@ export async function createDeal(formData: FormData) {
     }
 
     // Add the current user as a contact for this deal (assuming they're an admin/owner)
-    const { error: contactError } = await supabase
-      .from("deal_contacts")
-      .insert({
-        deal_id: dealId,
-        contact_id: userId,
-        role: "Owner",
-        created_at: new Date().toISOString(),
-      });
+    const { error: contactError } = await supabase.from("deal_roles").insert({
+      deal_id: Number(dealId),
+      contact_id: Number(userId),
+      role: "Owner",
+      created_at: new Date().toISOString(),
+    });
 
     if (contactError) {
       console.error("Error adding contact to deal:", contactError);
@@ -75,30 +78,30 @@ export async function createDeal(formData: FormData) {
 }
 
 export async function updateDeal(formData: FormData) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
   }
 
-  const id = formData.get("id") as string;
-  const name = formData.get("name") as string;
-  const type = formData.get("type") as string;
-  const amount = formData.get("amount") as string;
-  const location = formData.get("location") as string;
-  const description = formData.get("description") as string;
-  const roi = formData.get("roi") as string;
-  const startDate = formData.get("startDate") as string;
-  const status = formData.get("status") as string;
+  const id = formData.get("id");
+  const name = formData.get("name");
+  const type = formData.get("type");
+  const amount = formData.get("amount");
+  const location = formData.get("location");
+  const description = formData.get("description");
+  const roi = formData.get("roi");
+  const startDate = formData.get("startDate");
+  const status = formData.get("status");
 
   if (
-    !id ||
-    !name ||
-    !type ||
-    !amount ||
-    !location ||
-    !roi ||
-    !startDate ||
-    !status
+    typeof id !== "string" ||
+    typeof name !== "string" ||
+    typeof type !== "string" ||
+    typeof amount !== "string" ||
+    typeof location !== "string" ||
+    typeof roi !== "string" ||
+    typeof startDate !== "string" ||
+    typeof status !== "string"
   ) {
     throw new Error("Missing required fields");
   }
@@ -113,7 +116,7 @@ export async function updateDeal(formData: FormData) {
     const { error } = await supabase
       .from("deal")
       .update({
-        name,
+        deal_name: name,
         type,
         amount: cleanAmount,
         location,
@@ -123,7 +126,7 @@ export async function updateDeal(formData: FormData) {
         status,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", Number(id));
 
     if (error) {
       throw new Error(error.message);
@@ -138,7 +141,7 @@ export async function updateDeal(formData: FormData) {
 }
 
 export async function deleteDeal(id: string) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
   }
@@ -148,10 +151,10 @@ export async function deleteDeal(id: string) {
 
     // Check if the user has permission to delete this deal
     const { data: dealContact, error: checkError } = await supabase
-      .from("deal_contacts")
+      .from("deal_roles")
       .select("*")
-      .eq("deal_id", id)
-      .eq("contact_id", userId)
+      .eq("deal_id", Number(id))
+      .eq("contact_id", Number(userId))
       .eq("role", "Owner")
       .single();
 
@@ -160,7 +163,7 @@ export async function deleteDeal(id: string) {
     }
 
     // Delete the deal
-    const { error } = await supabase.from("deal").delete().eq("id", id);
+    const { error } = await supabase.from("deal").delete().eq("id", Number(id));
 
     if (error) {
       throw new Error(error.message);

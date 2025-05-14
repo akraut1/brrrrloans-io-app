@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseClient } from "@/lib/supabase-server";
 import { auth } from "@clerk/nextjs/server";
+import type { Tables } from "@/types/supabase";
 
 export async function GET(request: Request) {
   try {
@@ -14,9 +15,9 @@ export async function GET(request: Request) {
     const supabase = await getSupabaseClient();
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-    const status = searchParams.get("status");
-    const type = searchParams.get("type");
-    const search = searchParams.get("search");
+    const status = searchParams.get("status") ?? "";
+    const type = searchParams.get("type") ?? "";
+    const search = searchParams.get("search") ?? "";
 
     // 1. Find the user in user_profile
     const { data: userProfile, error: userProfileError } = await supabase
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
     const { data: contact, error: contactError } = await supabase
       .from("contact")
       .select("id")
-      .eq("email_address", userProfile.email)
+      .eq("email_address", userProfile.email ?? "")
       .single();
 
     console.log("Contact lookup result:", {
@@ -64,7 +65,7 @@ export async function GET(request: Request) {
         deal:deal_id(*)
       `
       )
-      .eq("contact_id", contact.id);
+      .eq("contact_id", Number(contact.id ?? 0));
 
     // Apply filters if provided
     if (status) {
@@ -95,7 +96,10 @@ export async function GET(request: Request) {
 
     console.log("All clerk_ids in DB:", allClerkIds);
 
-    return NextResponse.json(data || []);
+    // The returned data is: Array<{ ...bs_investor_deals fields..., deal: Tables<"deal"> }>
+    return NextResponse.json(
+      (data || []) as (Tables<"bs_investor_deals"> & { deal: Tables<"deal"> })[]
+    );
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(

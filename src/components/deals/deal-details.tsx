@@ -1,14 +1,41 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
+import type { FC } from "react";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts"
-import { Building, MapPin, Users, Calendar, DollarSign } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  BarChart,
+  Bar,
+} from "recharts";
+import { Building, MapPin, Users, Calendar, DollarSign } from "lucide-react";
 
 // Mock data for the charts
 const performanceData = [
@@ -20,7 +47,7 @@ const performanceData = [
   { month: "Jun", value: 11000 },
   { month: "Jul", value: 11200 },
   { month: "Aug", value: 11400 },
-]
+];
 
 const investorData = [
   { name: "Investor 1", amount: 250000 },
@@ -29,18 +56,62 @@ const investorData = [
   { name: "Investor 4", amount: 125000 },
   { name: "Investor 5", amount: 100000 },
   { name: "Others", amount: 375000 },
-]
+];
 
 // Mock data for distributions
 const distributions = [
-  { id: "DIST-001", amount: "$15,000", type: "Monthly Interest", date: "2024-04-15", status: "Completed" },
-  { id: "DIST-002", amount: "$15,000", type: "Monthly Interest", date: "2024-03-15", status: "Completed" },
-  { id: "DIST-003", amount: "$15,000", type: "Monthly Interest", date: "2024-02-15", status: "Completed" },
-  { id: "DIST-004", amount: "$15,000", type: "Monthly Interest", date: "2024-05-15", status: "Processing" },
-  { id: "DIST-005", amount: "$15,000", type: "Monthly Interest", date: "2024-06-15", status: "Scheduled" },
-]
+  {
+    id: "DIST-001",
+    amount: "$15,000",
+    type: "Monthly Interest",
+    date: "2024-04-15",
+    status: "Completed",
+  },
+  {
+    id: "DIST-002",
+    amount: "$15,000",
+    type: "Monthly Interest",
+    date: "2024-03-15",
+    status: "Completed",
+  },
+  {
+    id: "DIST-003",
+    amount: "$15,000",
+    type: "Monthly Interest",
+    date: "2024-02-15",
+    status: "Completed",
+  },
+  {
+    id: "DIST-004",
+    amount: "$15,000",
+    type: "Monthly Interest",
+    date: "2024-05-15",
+    status: "Processing",
+  },
+  {
+    id: "DIST-005",
+    amount: "$15,000",
+    type: "Monthly Interest",
+    date: "2024-06-15",
+    status: "Scheduled",
+  },
+];
 
-export function DealDetails({ deal }) {
+interface DealDetailsProps {
+  deal: {
+    name?: string;
+    location?: string;
+    type?: string;
+    status?: string;
+    amount?: string;
+    roi?: string;
+    date?: string;
+    investors?: string;
+    // Add more fields as needed
+  };
+}
+
+export function DealDetails({ deal }: DealDetailsProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -62,10 +133,16 @@ export function DealDetails({ deal }) {
               </div>
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Status</p>
-                <Badge variant={deal.status === "Active" ? "default" : "secondary"}>{deal.status}</Badge>
+                <Badge
+                  variant={deal.status === "Active" ? "default" : "secondary"}
+                >
+                  {deal.status}
+                </Badge>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Investment</p>
+                <p className="text-sm text-muted-foreground">
+                  Total Investment
+                </p>
                 <div className="flex items-center">
                   <DollarSign className="h-4 w-4 mr-1" />
                   <p className="font-medium">{deal.amount}</p>
@@ -79,7 +156,9 @@ export function DealDetails({ deal }) {
                 <p className="text-sm text-muted-foreground">Start Date</p>
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
-                  <p className="font-medium">{new Date(deal.date).toLocaleDateString()}</p>
+                  <p className="font-medium">
+                    {deal.date ? new Date(deal.date).toLocaleDateString() : "-"}
+                  </p>
                 </div>
               </div>
               <div className="space-y-1">
@@ -123,7 +202,13 @@ export function DealDetails({ deal }) {
                     }
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="value" stroke="var(--color-value)" name="Value" strokeWidth={2} />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="var(--color-value)"
+                    name="Value"
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -157,18 +242,22 @@ export function DealDetails({ deal }) {
                 <TableBody>
                   {distributions.map((distribution) => (
                     <TableRow key={distribution.id}>
-                      <TableCell className="font-medium">{distribution.id}</TableCell>
+                      <TableCell className="font-medium">
+                        {distribution.id}
+                      </TableCell>
                       <TableCell>{distribution.type}</TableCell>
                       <TableCell>{distribution.amount}</TableCell>
-                      <TableCell>{new Date(distribution.date).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {new Date(distribution.date).toLocaleDateString()}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={
                             distribution.status === "Processing"
                               ? "secondary"
                               : distribution.status === "Scheduled"
-                                ? "outline"
-                                : "default"
+                              ? "outline"
+                              : "default"
                           }
                         >
                           {distribution.status}
@@ -212,7 +301,11 @@ export function DealDetails({ deal }) {
                       }
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="amount" fill="var(--color-amount)" name="Investment Amount" />
+                    <Bar
+                      dataKey="amount"
+                      fill="var(--color-amount)"
+                      name="Investment Amount"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -233,7 +326,8 @@ export function DealDetails({ deal }) {
                     <div>
                       <p className="font-medium">Offering Memorandum</p>
                       <p className="text-sm text-muted-foreground">
-                        PDF • 2.4 MB • Uploaded on {new Date("2023-08-10").toLocaleDateString()}
+                        PDF • 2.4 MB • Uploaded on{" "}
+                        {new Date("2023-08-10").toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -247,7 +341,8 @@ export function DealDetails({ deal }) {
                     <div>
                       <p className="font-medium">Operating Agreement</p>
                       <p className="text-sm text-muted-foreground">
-                        PDF • 1.8 MB • Uploaded on {new Date("2023-08-10").toLocaleDateString()}
+                        PDF • 1.8 MB • Uploaded on{" "}
+                        {new Date("2023-08-10").toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -261,7 +356,8 @@ export function DealDetails({ deal }) {
                     <div>
                       <p className="font-medium">Financial Projections</p>
                       <p className="text-sm text-muted-foreground">
-                        XLSX • 0.9 MB • Uploaded on {new Date("2023-08-12").toLocaleDateString()}
+                        XLSX • 0.9 MB • Uploaded on{" "}
+                        {new Date("2023-08-12").toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -275,10 +371,10 @@ export function DealDetails({ deal }) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
 
-function FileIcon(props) {
+const FileIcon: FC<React.SVGProps<SVGSVGElement>> = (props) => {
   return (
     <svg
       {...props}
@@ -295,5 +391,5 @@ function FileIcon(props) {
       <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
       <polyline points="14 2 14 8 20 8" />
     </svg>
-  )
-}
+  );
+};

@@ -36,6 +36,7 @@ export function DealDetailsWrapper({
           </AlertDescription>
         </Alert>
       }
+      dealId={dealId}
       deal={deal}
     />
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseClient } from "@/lib/supabase-server";
 import { auth } from "@clerk/nextjs/server";
+import type { Tables } from "@/types/supabase";
 
 export async function DELETE(
   request: Request,
@@ -19,7 +20,7 @@ export async function DELETE(
     const { data: document, error: fetchError } = await supabase
       .from("document_files")
       .select("*")
-      .eq("id", id)
+      .eq("id", parseInt(id))
       .eq("uploaded_by", userId)
       .single();
 
@@ -28,6 +29,7 @@ export async function DELETE(
       return NextResponse.json({ error: fetchError.message }, { status: 500 });
     }
 
+    // The returned data is: Tables<"document_files"> | null
     if (!document) {
       return NextResponse.json(
         { error: "Document not found" },
@@ -51,7 +53,7 @@ export async function DELETE(
     const { error: deleteError } = await supabase
       .from("document_files")
       .delete()
-      .eq("id", id);
+      .eq("id", parseInt(id));
 
     if (deleteError) {
       console.error("Error deleting document record:", deleteError);

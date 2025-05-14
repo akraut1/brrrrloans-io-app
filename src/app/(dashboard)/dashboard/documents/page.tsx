@@ -30,7 +30,7 @@ import { Download, Plus, Search } from "lucide-react";
 import { UploadDocumentDialog } from "@/components/upload-document-dialog";
 import { createClerkSupabaseClient } from "@/lib/supabase";
 import { useUser } from "@/hooks/use-clerk-auth";
-import type { Database } from "@/types/supabase";
+import type { Tables } from "@/types/supabase";
 import { SiteHeader } from "@/components/layout/site-header";
 
 // Sample deals data - in a real app, this would come from the database
@@ -41,11 +41,30 @@ const deals = [
   { id: "4", name: "Downtown Office Building" },
 ];
 
+// Define valid categories as a type guard
+const validCategories = [
+  "application",
+  "appraisal",
+  "assets",
+  "closing",
+  "credit_and_background",
+  "construction",
+  "environmental",
+  "experience",
+  "id",
+  "insurance",
+  "pricing",
+  "property",
+  "seasoning",
+  "servicing",
+  "title",
+  "entity",
+] as const;
+type CategoryType = (typeof validCategories)[number];
+
 export default function DocumentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [documents, setDocuments] = useState<
-    Database["public"]["Tables"]["document_files"]["Row"][]
-  >([]);
+  const [documents, setDocuments] = useState<Tables<"document_files">[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -68,14 +87,21 @@ export default function DocumentsPage() {
         .eq("uploaded_by", user.id);
 
       // Apply additional filters if selected
-      if (selectedCategory !== "all") {
-        query = query.eq("category", selectedCategory);
+      if (
+        selectedCategory !== "all" &&
+        validCategories.includes(selectedCategory as CategoryType)
+      ) {
+        query = query.eq("category", selectedCategory as CategoryType);
       }
 
       if (selectedDeal !== "all-deals" && selectedDeal !== "multiple") {
-        query = query.eq("deal_id", selectedDeal);
+        const dealIdNum = Number(selectedDeal);
+        if (!isNaN(dealIdNum)) {
+          query = query.eq("deal_id", dealIdNum);
+        }
       } else if (selectedDeal === "multiple") {
-        query = query.eq("deal_id", "multiple");
+        // Only filter if your schema allows 'multiple' as a string, otherwise skip
+        // query = query.eq("deal_id", "multiple");
       }
 
       const response = await query.order("uploaded_at", {
@@ -130,18 +156,28 @@ export default function DocumentsPage() {
   // Filter documents based on search term
   const filteredDocuments = documents.filter(
     (doc) =>
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (doc.deal_id &&
-        (deals.find((d) => d.id === doc.deal_id)?.name || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()))
+      (typeof doc.name === "string" &&
+        doc.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (typeof doc.id === "string"
+        ? (doc.id as string).toLowerCase().includes(searchTerm.toLowerCase())
+        : typeof doc.id === "number" &&
+          doc.id.toString().toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (doc.deal_id !== null &&
+        (() => {
+          const dealName = deals.find(
+            (d) => d.id === doc.deal_id?.toString()
+          )?.name;
+          return (
+            typeof dealName === "string" &&
+            dealName.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        })())
   );
 
   // Helper to get deal name from deal_id
-  function getDealName(deal_id: string | null) {
-    if (!deal_id) return "Multiple";
-    const deal = deals.find((d) => d.id === deal_id);
+  function getDealName(deal_id: string | number | null) {
+    if (deal_id === null || deal_id === undefined) return "Multiple";
+    const deal = deals.find((d) => d.id === deal_id.toString());
     return deal ? deal.name : "Multiple";
   }
 
@@ -240,15 +276,16 @@ export default function DocumentsPage() {
                   {filteredDocuments.map((doc) => (
                     <TableRow key={doc.id}>
                       <TableCell className="font-medium">{doc.id}</TableCell>
-                      <TableCell>{doc.name}</TableCell>
+                      <TableCell>{doc.name ?? ""}</TableCell>
                       <TableCell>{getDealName(doc.deal_id)}</TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            doc.category === "Legal"
+                            doc.category &&
+                            validCategories.includes(
+                              doc.category as CategoryType
+                            )
                               ? "default"
-                              : doc.category === "Financial"
-                              ? "secondary"
                               : "outline"
                           }
                         >
@@ -258,8 +295,8 @@ export default function DocumentsPage() {
                       <TableCell>{doc.file_type}</TableCell>
                       <TableCell>{formatFileSize(doc.file_size)}</TableCell>
                       <TableCell>
-                        {doc.upload_date
-                          ? new Date(doc.upload_date).toLocaleDateString()
+                        {doc.uploaded_at
+                          ? new Date(doc.uploaded_at).toLocaleDateString()
                           : ""}
                       </TableCell>
                       <TableCell className="text-right">

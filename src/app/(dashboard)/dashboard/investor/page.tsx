@@ -20,6 +20,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DistributionsListWrapper } from "@/components/distributions/protected-distributions-list";
 import { ActiveDealsListWrapper } from "@/components/deals/active-deals-list";
+import type { Tables } from "@/types/supabase";
 
 interface MonthlyDistribution {
   month: string;

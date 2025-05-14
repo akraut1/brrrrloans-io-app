@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { getSupabaseClient } from "@/lib/supabase-server";
+import type { Enums } from "@/types/supabase";
 
 export async function uploadDocument(formData: FormData) {
   const { userId } = await auth();
@@ -10,19 +11,36 @@ export async function uploadDocument(formData: FormData) {
     throw new Error("Unauthorized");
   }
 
-  const documentName = formData.get("name") as string;
-  const documentDealId = formData.get("deal_id") as string;
-  const documentBorrowerId = formData.get("borrower_id") as string;
-  const documentGuarantorId = formData.get("guarantor_id") as string;
-  const documentEntityId = formData.get("entity_id") as string;
-  const documentPropertyId = formData.get("property_id") as string;
-  const documentCategory = formData.get("category") as string;
+  const documentName = formData.get("name");
+  const documentDealId = formData.get("deal_id");
+  const documentBorrowerId = formData.get("borrower_id");
+  const documentGuarantorId = formData.get("guarantor_id");
+  const documentEntityId = formData.get("entity_id");
+  const documentPropertyId = formData.get("property_id");
+  const documentCategory = formData.get("category");
   const documentIsRequired = formData.get("is_required") === "true";
-  const documentStatus = formData.get("status") as string;
-  const documentFileUrl = formData.get("file_url") as string;
-  const documentFileSize = Number.parseInt(formData.get("file_size") as string);
-  const documentFileType = formData.get("file_type") as string;
-  const documentFilePath = formData.get("file_path") as string;
+  const documentStatus = formData.get("status");
+  const documentFileUrl = formData.get("file_url");
+  const documentFileSizeRaw = formData.get("file_size");
+  const documentFileType = formData.get("file_type");
+  const documentFilePath = formData.get("file_path");
+
+  if (
+    typeof documentName !== "string" ||
+    typeof documentDealId !== "string" ||
+    typeof documentBorrowerId !== "string" ||
+    typeof documentGuarantorId !== "string" ||
+    typeof documentEntityId !== "string" ||
+    typeof documentPropertyId !== "string" ||
+    typeof documentCategory !== "string" ||
+    typeof documentStatus !== "string" ||
+    typeof documentFileUrl !== "string" ||
+    typeof documentFileSizeRaw !== "string" ||
+    typeof documentFileType !== "string"
+  ) {
+    throw new Error("Missing required fields");
+  }
+  const documentFileSize = Number.parseInt(documentFileSizeRaw);
 
   if (
     !documentName ||
@@ -48,23 +66,39 @@ export async function uploadDocument(formData: FormData) {
     const documentId = `DOC-${Math.floor(100000 + Math.random() * 900000)}`;
 
     // Insert document record
+    const allowedCategories = [
+      "application",
+      "appraisal",
+      "assets",
+      "closing",
+      "credit_and_background",
+      "construction",
+      "environmental",
+      "experience",
+      "id",
+      "insurance",
+      "pricing",
+      "property",
+      "seasoning",
+      "servicing",
+      "title",
+      "entity",
+    ];
+    const categoryValue =
+      typeof documentCategory === "string" &&
+      allowedCategories.includes(documentCategory)
+        ? (documentCategory as Enums<"document_category">)
+        : undefined;
     const { error } = await supabase.from("document_files").insert({
-      id: documentId,
-      name: documentName,
-      deal_id: documentDealId,
-      borrower_id: documentBorrowerId,
-      guarantor_id: documentGuarantorId,
-      entity_id: documentEntityId,
-      property_id: documentPropertyId,
-      category: documentCategory,
-      is_required: documentIsRequired,
-      status: documentStatus,
-      file_type: documentFileType,
-      file_size: documentFileSize,
-      file_url: documentFileUrl,
-      file_path: documentFilePath,
-      uploaded_by: userId,
-      upload_date: new Date().toISOString(),
+      category: categoryValue,
+      file_type:
+        typeof documentFileType === "string" ? documentFileType : undefined,
+      file_size:
+        typeof documentFileSize === "number" ? documentFileSize : undefined,
+      file_url:
+        typeof documentFileUrl === "string" ? documentFileUrl : undefined,
+      uploaded_by: typeof userId === "string" ? userId : undefined,
+      uploaded_at: new Date().toISOString(),
     });
 
     if (error) {
@@ -92,7 +126,7 @@ export async function deleteDocument(id: string) {
     const { data: document, error: fetchError } = await supabase
       .from("document_files")
       .select("*")
-      .eq("id", id)
+      .eq("id", Number(id))
       .eq("uploaded_by", userId)
       .single();
 
@@ -120,7 +154,7 @@ export async function deleteDocument(id: string) {
     const { error: deleteError } = await supabase
       .from("document_files")
       .delete()
-      .eq("id", id);
+      .eq("id", Number(id));
 
     if (deleteError) {
       throw new Error(deleteError.message);

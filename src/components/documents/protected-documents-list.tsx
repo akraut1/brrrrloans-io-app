@@ -36,13 +36,21 @@ function UnprotectedDocumentsList({ dealId }: DocumentsListProps) {
   useEffect(() => {
     async function fetchDocuments() {
       const { data, error } = await supabase
-        .from("documents")
+        .from("document_files")
         .select("*")
-        .eq("deal_id", dealId)
+        .eq("deal_id", Number(dealId))
         .order("created_at", { ascending: false });
 
       if (!error && data) {
-        setDocuments(data);
+        // Map Supabase data to Document interface
+        const mapped = data.map((doc: any) => ({
+          id: String(doc.id),
+          name: doc.name ?? "Untitled Document",
+          description: doc.description ?? null,
+          created_at: doc.created_at ?? "",
+          storage_path: doc.file_path ?? doc.storage_path ?? "",
+        }));
+        setDocuments(mapped);
       }
       setLoading(false);
     }

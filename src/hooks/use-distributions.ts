@@ -2,16 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import type { Tables } from "@/types/supabase";
 
-interface Distribution {
-  id: string;
-  dealId: string;
-  dealName: string;
-  amount: string;
-  type: string;
-  date: string;
-  status: string;
-}
+type Distribution = Tables<"bs_investor_distributions">;
 
 interface UseDistributionsOptions {
   status?: string;

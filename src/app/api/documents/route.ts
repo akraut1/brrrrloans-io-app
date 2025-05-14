@@ -1,6 +1,27 @@
 import { NextResponse } from "next/server";
 import { getSupabaseClient } from "@/lib/supabase-server";
 import { auth } from "@clerk/nextjs/server";
+import type { Tables } from "@/types/supabase";
+
+const validCategories = [
+  "application",
+  "appraisal",
+  "assets",
+  "closing",
+  "credit_and_background",
+  "construction",
+  "environmental",
+  "experience",
+  "id",
+  "insurance",
+  "pricing",
+  "property",
+  "seasoning",
+  "servicing",
+  "title",
+  "entity",
+] as const;
+type CategoryType = (typeof validCategories)[number];
 
 export async function GET(request: Request) {
   try {
@@ -12,26 +33,34 @@ export async function GET(request: Request) {
     const supabase = await getSupabaseClient();
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-    const category = searchParams.get("category");
-    const dealId = searchParams.get("dealId");
-    const search = searchParams.get("search");
+    const category = searchParams.get("category") ?? "";
+    const dealId = searchParams.get("dealId") ?? "";
+    const search = searchParams.get("search") ?? "";
 
     // Get documents uploaded by this user
     let query = supabase
       .from("document_files")
       .select("*")
-      .eq("uploaded_at", userId);
+      .eq("uploaded_by", userId ?? "");
 
     // Apply filters
-    if (category && category !== "all") {
-      query = query.eq("category", category);
+    if (
+      category &&
+      category !== "all" &&
+      validCategories.includes(category as CategoryType)
+    ) {
+      query = query.eq("category", category as CategoryType);
     }
 
     if (dealId && dealId !== "all-deals") {
       if (dealId === "multiple") {
-        query = query.eq("deal_id", "multiple");
+        // Only filter if your schema allows 'multiple' as a string, otherwise skip
+        // query = query.eq("deal_id", "multiple");
       } else {
-        query = query.eq("deal_id", dealId);
+        const dealIdNum = Number(dealId);
+        if (!isNaN(dealIdNum)) {
+          query = query.eq("deal_id", dealIdNum);
+        }
       }
     }
 
@@ -54,7 +83,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data || []);
+    return NextResponse.json((data || []) as Tables<"document_files">[]);
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
@@ -79,19 +108,32 @@ export async function POST(request: Request) {
     const documentId = `DOC-${Math.floor(100000 + Math.random() * 900000)}`;
 
     // Insert document record
+    const categoryValue = validCategories.includes(category as CategoryType)
+      ? (category as CategoryType)
+      : undefined;
+    const dealIdValue =
+      typeof deal_id === "string" && deal_id !== "multiple"
+        ? Number(deal_id)
+        : typeof deal_id === "number"
+        ? deal_id
+        : null;
+    const insertObj: any = {
+      name,
+      deal_id: dealIdValue,
+      category: categoryValue,
+      file_type,
+      file_size,
+      file_url,
+      uploaded_by: userId,
+      uploaded_at: new Date().toISOString(),
+    };
+    // Only include id if the type allows a string, otherwise let the DB auto-generate
+    if (typeof documentId === "string" && documentId.startsWith("DOC-")) {
+      insertObj.id = documentId;
+    }
     const { data, error } = await supabase
       .from("document_files")
-      .insert({
-        id: documentId,
-        name,
-        deal_id,
-        category,
-        file_type,
-        file_size,
-        file_url,
-        uploaded_by: userId,
-        uploaded_at: new Date().toISOString(),
-      })
+      .insert(insertObj)
       .select();
 
     if (error) {

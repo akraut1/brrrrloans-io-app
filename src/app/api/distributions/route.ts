@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseClient } from "@/lib/supabase-server";
 import { auth } from "@clerk/nextjs/server";
+import type { Tables } from "@/types/supabase";
 
 export async function GET(request: Request) {
   try {
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const investorId = profile.contact_id;
+    const investorId = Number(profile.contact_id ?? 0);
 
     if (!investorId) {
       return NextResponse.json(
@@ -36,10 +37,10 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-    const status = searchParams.get("status");
-    const type = searchParams.get("type");
-    const search = searchParams.get("search");
-    const period = searchParams.get("period") || "all";
+    const status = searchParams.get("status") ?? "";
+    const type = searchParams.get("type") ?? "";
+    const search = searchParams.get("search") ?? "";
+    const period = searchParams.get("period") ?? "all";
 
     // Query distributions for this investor
     let query = supabase
@@ -75,7 +76,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data || []);
+    // The returned data is: Array<{ ...bs_investor_distributions fields..., deal: Pick<Tables<"deal">, "deal_name"> }>
+    return NextResponse.json(
+      (data || []) as (Tables<"bs_investor_distributions"> & {
+        deal: Pick<Tables<"deal">, "deal_name">;
+      })[]
+    );
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(

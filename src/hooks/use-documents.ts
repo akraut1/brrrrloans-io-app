@@ -2,18 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import type { Tables } from "@/types/supabase";
 
-interface Document {
-  id: string;
-  name: string;
-  deal_id: string;
-  deal_name: string;
-  category: string;
-  file_type: string;
-  file_size: number;
-  file_url: string;
-  upload_date: string;
-}
+type Document = Tables<"document_files">;
 
 interface UseDocumentsOptions {
   category?: string;
