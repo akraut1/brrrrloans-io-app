@@ -22,6 +22,7 @@ import {
 import { FileDropzone } from "@/components/file-dropzone";
 import { createClerkSupabaseClient } from "@/lib/supabase";
 import { useUser } from "@/hooks/use-clerk-auth";
+import type { Enums } from "@/types/supabase";
 
 interface FileData {
   name: string;
@@ -73,16 +74,36 @@ export function UploadDocumentDialog({
       const documentId = `DOC-${Math.floor(100000 + Math.random() * 900000)}`;
 
       // Insert document record into the database
+      const allowedCategories = [
+        "application",
+        "appraisal",
+        "assets",
+        "closing",
+        "credit_and_background",
+        "construction",
+        "environmental",
+        "experience",
+        "id",
+        "insurance",
+        "pricing",
+        "property",
+        "seasoning",
+        "servicing",
+        "title",
+        "entity",
+      ];
+      const categoryValue =
+        typeof category === "string" && allowedCategories.includes(category)
+          ? (category as Enums<"document_category">)
+          : undefined;
       const { error: dbError } = await supabase.from("document_files").insert({
-        id: documentId,
-        name: documentName,
-        deal_id: dealId,
-        category: category,
+        deal_id: dealId ? Number(dealId) : null,
+        category: categoryValue,
         file_type: fileData.type.split("/").pop()?.toUpperCase() || "UNKNOWN",
         file_size: fileData.size,
         file_url: fileData.url,
         uploaded_by: user.id, // Add the user's ID
-        upload_date: new Date().toISOString(),
+        uploaded_at: new Date().toISOString(),
       });
 
       if (dbError) throw dbError;
@@ -107,7 +128,7 @@ export function UploadDocumentDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChangeAction}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-full max-w-5xl px-6 sm:px-10">
         <DialogHeader>
           <DialogTitle>Upload Document</DialogTitle>
           <DialogDescription>
@@ -161,20 +182,23 @@ export function UploadDocumentDialog({
             </div>
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-2 w-full">
             <Label>Document File</Label>
-            <FileDropzone
-              bucketName="documents"
-              folderPath={
-                user
-                  ? `user_${user.id}/${
-                      dealId !== "multiple" ? dealId : "general"
-                    }`
-                  : "temp"
-              }
-              onUploadComplete={handleFileUploadComplete}
-              maxSizeMB={50}
-            />
+            <div className="w-full overflow-x-auto">
+              <FileDropzone
+                className="w-full"
+                bucketName="documents"
+                folderPath={
+                  user
+                    ? `user_${user.id}/$${
+                        dealId !== "multiple" ? dealId : "general"
+                      }`
+                    : "temp"
+                }
+                onUploadComplete={handleFileUploadComplete}
+                maxSizeMB={50}
+              />
+            </div>
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
