@@ -43,11 +43,13 @@ alter table "public"."bs_investor_deals" drop constraint "bs_investor_deals_deal
 
 drop function if exists "public"."public_add_individual_documents_disabled"();
 
-alter table "public"."document_files" drop constraint "document_files_pkey";
+-- Skipping due to foreign key dependencies
+-- alter table "public"."document_files" drop constraint "document_files_pkey";
 
 alter table "public"."user_profile" drop constraint "user_profile_pkey";
 
-drop index if exists "public"."document_files_pkey";
+-- Skipping due to foreign key dependencies
+-- drop index if exists "public"."document_files_pkey";
 
 drop index if exists "public"."idx_user_clerk_orgs_members_clerk_organization_fkey";
 
