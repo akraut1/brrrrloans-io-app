@@ -19,9 +19,9 @@ export async function GET(request: Request) {
     const type = searchParams.get("type") ?? "";
     const search = searchParams.get("search") ?? "";
 
-    // 1. Find the user in user_profile
+    // 1. Find the user in auth_user_profiles
     const { data: userProfile, error: userProfileError } = await supabase
-      .from("user_profile")
+      .from("auth_user_profiles")
       .select("email")
       .eq("clerk_id", userId)
       .single();
@@ -91,7 +91,7 @@ export async function GET(request: Request) {
 
     // After fetching all user_profile rows:
     const { data: allClerkIds } = await supabase
-      .from("user_profile")
+      .from("auth_user_profiles")
       .select("clerk_id");
 
     console.log("All clerk_ids in DB:", allClerkIds);

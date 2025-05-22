@@ -7,7 +7,7 @@ export async function checkInternalAccess() {
 
   try {
     const { data: profile, error } = await supabase
-      .from("user_profile")
+      .from("auth_user_profiles")
       .select("is_internal_yn, is_active_yn")
       .single();
 

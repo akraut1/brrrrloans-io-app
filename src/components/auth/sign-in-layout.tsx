@@ -18,14 +18,14 @@ export function SignInLayout({ children }: SignInLayoutProps) {
             <div className="flex h-6 w-6 items-center justify-center rounded-md">
               <Image
                 src="/logos/brrrr-icon-sq-black-192.png"
-                alt="Brrrr Loans 1 LLC Logo"
+                alt="Brrrr Loans 1 Icon Black"
                 width={30}
                 height={30}
                 className="block dark:hidden"
               />
               <Image
                 src="/logos/brrrr-icon-sq-white-192.png"
-                alt="Brrrr Loans 1 LLC Logo"
+                alt="Brrrr Loans 1 Icon White"
                 width={30}
                 height={30}
                 className="hidden dark:block"

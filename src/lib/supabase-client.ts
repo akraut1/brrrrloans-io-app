@@ -7,10 +7,7 @@ import type { Database } from "@/types/supabase";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 
-/**
- * Creates a client-side Supabase client.
- * This is safe to use in client components.
- */
+// Create a client-side Supabase client safe to use in client components.
 export function createSupabaseClient(): SupabaseClient<Database> {
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
@@ -20,9 +17,7 @@ export function createSupabaseClient(): SupabaseClient<Database> {
   });
 }
 
-/**
- * Helper function to set the Supabase JWT from Clerk
- */
+// Helper function to set the Supabase JWT from Clerk
 export async function setSupabaseToken(
   client: SupabaseClient<Database>,
   token: string

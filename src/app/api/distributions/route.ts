@@ -12,9 +12,9 @@ export async function GET(request: Request) {
 
     const supabase = await getSupabaseClient();
 
-    // Map Clerk userId to contact_id (investor_id) using user_profile
+    // Map Clerk userId to contact_id (investor_id) using auth_user_profiles
     const { data: profile, error: profileError } = await supabase
-      .from("user_profile")
+      .from("auth_user_profiles")
       .select("contact_id")
       .eq("clerk_id", userId)
       .single();

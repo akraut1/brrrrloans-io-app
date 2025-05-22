@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 import animate from "tailwindcss-animate";
 
 const config = {
-  darkMode: ["class", "class"],
+  darkMode: "class",
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -22,7 +22,7 @@ const config = {
       animation: {
         "background-fade": "background-fade 8s ease-in-out infinite",
       },
-      
+
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -12,10 +12,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-/**
- * Creates a Supabase client that uses Clerk session tokens for authentication.
- * Use this in client components where you need to manually set the token.
- */
+// Create a Supabase client that uses Clerk session tokens for authentication.
+// Use this in client components where you need to manually set the token.
+
 export function createClerkSupabaseClient(): SupabaseClient<Database> {
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
@@ -25,12 +24,20 @@ export function createClerkSupabaseClient(): SupabaseClient<Database> {
   });
 }
 
-/**
- * Creates a Supabase client with service role access.
- * This should ONLY be used in trusted server contexts like webhooks.
- */
+// Create a Supabase client with service role access.
+// This should ONLY be used in trusted server contexts like webhooks.
+//
+// NOTE: This requires the SUPABASE_SERVICE_ROLE_KEY environment variable.
+// If this variable is not set, this function will throw an error.
+// For client-side use, use createClerkSupabaseClient instead.
+
 export function createServiceRoleClient(): SupabaseClient<Database> {
   if (!supabaseServiceKey) {
+    console.warn("Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
+    console.warn(
+      "This is only needed for administrative operations like creating buckets or setting up RLS policies"
+    );
+    console.warn("For client-side use, use createClerkSupabaseClient instead");
     throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
   }
 
@@ -42,67 +49,61 @@ export function createServiceRoleClient(): SupabaseClient<Database> {
   });
 }
 
-/**
- * Sets up storage bucket and policies for document storage.
- * This should be called once during app initialization.
- */
+// Supabase Storage - Set up buckets and policies for document storage.
+// Note: this should be called once during app initialization.
+// Note: This is a simplified version that just checks if the documents bucket exists. It does not try to create the bucket or set up RLS policies (both require service role permissions).
 export async function setupStorage(): Promise<void> {
   // Skip during build/SSR
   if (typeof window === "undefined") return;
 
-  const client = createClerkSupabaseClient();
-
   try {
+    // Use regular client
+    const client = createClerkSupabaseClient();
+
+    console.log("Checking if documents bucket exists...");
+
     // Check if the bucket exists
-    const { data: buckets, error: bucketsError } =
-      await client.storage.listBuckets();
+    try {
+      const { data: buckets, error: bucketsError } =
+        await client.storage.listBuckets();
 
-    if (bucketsError) {
-      console.error("Error listing buckets:", bucketsError);
-      return;
-    }
+      if (bucketsError) {
+        console.error("Error listing buckets:", bucketsError);
 
-    const documentsBucketExists = buckets?.some(
-      (bucket) => bucket.name === "documents"
-    );
-
-    // Create the bucket if it doesn't exist
-    if (!documentsBucketExists) {
-      const { error: createError } = await client.storage.createBucket(
-        "documents",
-        {
-          public: false,
-          fileSizeLimit: 52428800, // 50MB in bytes
+        if (bucketsError.message.includes("permission denied")) {
+          console.warn(
+            "You don't have permission to list buckets. Make sure your RLS policies are set up properly."
+          );
         }
-      );
-
-      if (createError) {
-        console.error("Error creating documents bucket:", createError);
         return;
       }
 
-      console.log("Documents bucket created successfully");
+      const documentsBucketExists = buckets?.some(
+        (bucket) => bucket.name === "documents"
+      );
 
-      // Set up storage policies for the documents bucket
-      const { error: policyError } = await client.rpc("create_storage_policy", {
-        bucket_name: "documents",
-        policy_name: "User Access Policy",
-        definition:
-          "((bucket_id = 'documents'::text) AND (auth.uid()::text = (storage.foldername(name))[1]))",
-      });
-
-      if (policyError) {
-        console.error("Error setting up storage policy:", policyError);
+      // Just log whether the bucket exists - no service role operations
+      if (documentsBucketExists) {
+        console.log("Documents bucket exists");
+      } else {
+        console.warn("Documents bucket doesn't exist!");
+        console.warn(
+          "Please create a bucket named 'documents' in your Supabase dashboard:"
+        );
+        console.warn(`${supabaseUrl}/project/storage/buckets`);
+        console.warn(
+          "Then set up RLS policies to allow authenticated users to access it."
+        );
       }
+    } catch (err) {
+      console.error("Error checking buckets:", err);
     }
   } catch (error) {
     console.error("Error setting up storage:", error);
   }
 }
 
-/**
- * Helper function to set the Supabase JWT from Clerk
- */
+// Helper function to set the Supabase JWT from Clerk
 export async function setSupabaseToken(
   client: SupabaseClient<Database>,
   token: string

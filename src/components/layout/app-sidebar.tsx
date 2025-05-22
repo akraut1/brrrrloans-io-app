@@ -15,6 +15,7 @@ import {
   Moon,
   Laptop,
   DollarSign,
+  BarChart,
 } from "lucide-react";
 
 import {
@@ -70,7 +71,9 @@ export function AppSidebar(
       href: "/dashboard/documents",
       label: "Documents",
       icon: File,
-      isActive: pathname.startsWith("/dashboard/documents"),
+      isActive:
+        pathname.startsWith("/dashboard/documents") ||
+        pathname.startsWith("/dashboard/investor-statements"),
     },
     {
       href: "/dashboard/reports",

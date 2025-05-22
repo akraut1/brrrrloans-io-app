@@ -1,7 +1,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { DealDetailsWrapper } from "@/components/deals/protected-deal-details";
-import { DocumentsListWrapper } from "@/components/documents/protected-documents-list";
+import { DocumentsListWrapper } from "@/components/documents/list-protected-documents";
 import { DistributionsListWrapper } from "@/components/distributions/protected-distributions-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notFound } from "next/navigation";

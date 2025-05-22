@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/hooks/use-supabase";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   type FileError,
@@ -64,9 +65,8 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
     cacheControl = 3600,
     upsert = false,
   } = options;
-
-  // Move the Supabase client initialization inside the hook
-  const supabase = useMemo(() => createClient(), []);
+  // Get a Supabase client configured with the current Clerk session
+  const supabase = useSupabase();
 
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
