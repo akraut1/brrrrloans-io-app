@@ -5,6 +5,25 @@ import { revalidatePath } from "next/cache";
 import { getSupabaseClient } from "@/lib/supabase-server";
 import type { Enums } from "@/types/supabase";
 
+const validCategories = [
+  "application",
+  "appraisal",
+  "assets",
+  "closing",
+  "credit_and_background",
+  "construction",
+  "environmental",
+  "experience",
+  "id",
+  "insurance",
+  "pricing",
+  "property",
+  "seasoning",
+  "servicing",
+  "title",
+  "entity",
+] as const;
+
 export async function uploadDocument(formData: FormData) {
   const { userId } = await auth();
   if (!userId) {
@@ -25,88 +44,120 @@ export async function uploadDocument(formData: FormData) {
   const documentFileType = formData.get("file_type");
   const documentFilePath = formData.get("file_path");
 
+  // Validate required string fields
   if (
     typeof documentName !== "string" ||
-    typeof documentDealId !== "string" ||
-    typeof documentBorrowerId !== "string" ||
-    typeof documentGuarantorId !== "string" ||
-    typeof documentEntityId !== "string" ||
-    typeof documentPropertyId !== "string" ||
     typeof documentCategory !== "string" ||
-    typeof documentStatus !== "string" ||
     typeof documentFileUrl !== "string" ||
     typeof documentFileSizeRaw !== "string" ||
     typeof documentFileType !== "string"
   ) {
     throw new Error("Missing required fields");
   }
-  const documentFileSize = Number.parseInt(documentFileSizeRaw);
 
-  if (
-    !documentName ||
-    !documentDealId ||
-    !documentBorrowerId ||
-    !documentGuarantorId ||
-    !documentEntityId ||
-    !documentPropertyId ||
-    !documentCategory ||
-    !documentIsRequired ||
-    !documentStatus ||
-    !documentFileUrl ||
-    !documentFileSize ||
-    !documentFileType
-  ) {
-    throw new Error("Missing required fields");
+  // Validate inputs
+  if (!documentName.trim() || documentName.length > 255) {
+    throw new Error("Document name must be between 1 and 255 characters");
+  }
+
+  if (!documentFileUrl.trim()) {
+    throw new Error("File URL is required");
+  }
+
+  // Parse and validate file size
+  const documentFileSize = parseInt(documentFileSizeRaw, 10);
+  if (isNaN(documentFileSize) || documentFileSize <= 0) {
+    throw new Error("Invalid file size");
+  }
+
+  // Validate file size limit (50MB)
+  if (documentFileSize > 52428800) {
+    throw new Error("File size must be less than 50MB");
+  }
+
+  // Validate category
+  if (!validCategories.includes(documentCategory as any)) {
+    throw new Error("Invalid document category");
+  }
+
+  // Validate file type
+  if (!documentFileType.trim()) {
+    throw new Error("File type is required");
   }
 
   try {
     const supabase = await getSupabaseClient();
 
-    // Generate a document ID
-    const documentId = `DOC-${Math.floor(100000 + Math.random() * 900000)}`;
+    // Parse optional numeric fields
+    const dealId = documentDealId && typeof documentDealId === "string" && documentDealId !== "multiple" 
+      ? parseInt(documentDealId, 10) 
+      : null;
+    
+    if (documentDealId && documentDealId !== "multiple" && (isNaN(dealId!) || dealId! <= 0)) {
+      throw new Error("Invalid deal ID");
+    }
+
+    const borrowerId = documentBorrowerId && typeof documentBorrowerId === "string" && documentBorrowerId !== "" 
+      ? parseInt(documentBorrowerId, 10) 
+      : null;
+    
+    if (documentBorrowerId && documentBorrowerId !== "" && (isNaN(borrowerId!) || borrowerId! <= 0)) {
+      throw new Error("Invalid borrower ID");
+    }
+
+    const guarantorId = documentGuarantorId && typeof documentGuarantorId === "string" && documentGuarantorId !== "" 
+      ? parseInt(documentGuarantorId, 10) 
+      : null;
+    
+    if (documentGuarantorId && documentGuarantorId !== "" && (isNaN(guarantorId!) || guarantorId! <= 0)) {
+      throw new Error("Invalid guarantor ID");
+    }
+
+    const entityId = documentEntityId && typeof documentEntityId === "string" && documentEntityId !== "" 
+      ? parseInt(documentEntityId, 10) 
+      : null;
+    
+    if (documentEntityId && documentEntityId !== "" && (isNaN(entityId!) || entityId! <= 0)) {
+      throw new Error("Invalid entity ID");
+    }
+
+    const propertyId = documentPropertyId && typeof documentPropertyId === "string" && documentPropertyId !== "" 
+      ? parseInt(documentPropertyId, 10) 
+      : null;
+    
+    if (documentPropertyId && documentPropertyId !== "" && (isNaN(propertyId!) || propertyId! <= 0)) {
+      throw new Error("Invalid property ID");
+    }
 
     // Insert document record
-    const allowedCategories = [
-      "application",
-      "appraisal",
-      "assets",
-      "closing",
-      "credit_and_background",
-      "construction",
-      "environmental",
-      "experience",
-      "id",
-      "insurance",
-      "pricing",
-      "property",
-      "seasoning",
-      "servicing",
-      "title",
-      "entity",
-    ];
-    const categoryValue =
-      typeof documentCategory === "string" &&
-      allowedCategories.includes(documentCategory)
-        ? (documentCategory as Enums<"document_category">)
-        : undefined;
-    const { error } = await supabase.from("document_files").insert({
-      category: categoryValue,
-      file_type:
-        typeof documentFileType === "string" ? documentFileType : undefined,
-      file_size:
-        typeof documentFileSize === "number" ? documentFileSize : undefined,
-      file_url:
-        typeof documentFileUrl === "string" ? documentFileUrl : undefined,
-      uploaded_by: typeof userId === "string" ? userId : undefined,
-      uploaded_at: new Date().toISOString(),
-    });
+    const { data, error } = await supabase
+      .from("document_files")
+      .insert({
+        name: documentName.trim(),
+        deal_id: dealId,
+        borrower_id: borrowerId,
+        guarantor_id: guarantorId,
+        entity_id: entityId,
+        property_id: propertyId,
+        category: documentCategory as Enums<"document_category">,
+        is_required: documentIsRequired,
+        status: typeof documentStatus === "string" ? documentStatus as Enums<"document_status"> : null,
+        file_type: documentFileType.trim(),
+        file_size: documentFileSize,
+        file_url: documentFileUrl.trim(),
+        file_path: typeof documentFilePath === "string" ? documentFilePath.trim() : null,
+        uploaded_by: userId,
+        uploaded_at: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
 
     if (error) {
-      throw new Error(error.message);
+      throw new Error(`Failed to upload document: ${error.message}`);
     }
 
     revalidatePath("/dashboard/documents");
-    return { success: true, documentId };
+    return { success: true, documentId: data.id };
   } catch (error) {
     console.error("Error uploading document:", error);
     throw error;
@@ -119,6 +170,12 @@ export async function deleteDocument(id: string) {
     throw new Error("Unauthorized");
   }
 
+  // Validate document ID
+  const documentId = parseInt(id, 10);
+  if (isNaN(documentId) || documentId <= 0) {
+    throw new Error("Invalid document ID");
+  }
+
   try {
     const supabase = await getSupabaseClient();
 
@@ -126,22 +183,25 @@ export async function deleteDocument(id: string) {
     const { data: document, error: fetchError } = await supabase
       .from("document_files")
       .select("*")
-      .eq("id", Number(id))
+      .eq("id", documentId)
       .eq("uploaded_by", userId)
       .single();
 
     if (fetchError) {
-      throw new Error(fetchError.message);
+      if (fetchError.code === 'PGRST116') {
+        throw new Error("Document not found or you don't have permission to delete it");
+      }
+      throw new Error(`Failed to fetch document: ${fetchError.message}`);
     }
 
     if (!document) {
-      throw new Error("Document not found");
+      throw new Error("Document not found or you don't have permission to delete it");
     }
 
     // Delete the file from storage if we have a path
     if (document.file_path) {
       const { error: storageError } = await supabase.storage
-        .from("document_files")
+        .from("documents")
         .remove([document.file_path]);
 
       if (storageError) {
@@ -154,10 +214,11 @@ export async function deleteDocument(id: string) {
     const { error: deleteError } = await supabase
       .from("document_files")
       .delete()
-      .eq("id", Number(id));
+      .eq("id", documentId)
+      .eq("uploaded_by", userId); // Double-check ownership
 
     if (deleteError) {
-      throw new Error(deleteError.message);
+      throw new Error(`Failed to delete document: ${deleteError.message}`);
     }
 
     revalidatePath("/dashboard/documents");

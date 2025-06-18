@@ -1,6 +1,6 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseClient } from "@/lib/supabase-server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,23 +9,42 @@ export async function GET(request: NextRequest) {
     const investorId = url.searchParams.get("investorId");
     const orgId = url.searchParams.get("orgId");
 
-    const supabase = createRouteHandlerClient({ cookies });
-
-    // Check if user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    // Use Clerk authentication
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get Clerk-integrated Supabase client
+    const supabase = await getSupabaseClient();
+
     // Get user profile to check if they're a balance sheet investor or admin
-    const { data: authUserProfiles } = await supabase
+    const { data: authUserProfile, error: profileError } = await supabase
       .from("auth_user_profiles")
-      .select("role")
-      .eq("id", user.id)
+      .select("clerk_role, email")
+      .eq("clerk_id", userId)
       .single();
+
+    if (profileError || !authUserProfile) {
+      return NextResponse.json(
+        { error: "User profile not found" },
+        { status: 404 }
+      );
+    }
+
+    // Find the contact_id for this user
+    const { data: contact, error: contactError } = await supabase
+      .from("contact")
+      .select("id")
+      .eq("email_address", authUserProfile.email)
+      .single();
+
+    if (contactError || !contact) {
+      return NextResponse.json(
+        { error: "Contact not found for user" },
+        { status: 404 }
+      );
+    }
 
     // Query the database for investor statements
     // RLS will automatically filter statements based on user permissions
@@ -33,42 +52,24 @@ export async function GET(request: NextRequest) {
 
     // If investorId is provided, filter by it
     if (investorId) {
-      query = query.eq("investor_id", investorId);
-    }
-
-    // If orgId is provided and user is either admin or balance sheet investor,
-    // include statements for that organization
-    if (
-      (orgId && authUserProfiles?.role === "admin") ||
-      authUserProfiles?.role === "balance_sheet_investor"
-    ) {
-      // If we're also filtering by investorId, use an OR condition
-      if (investorId) {
-        query = query.or(`investor_id.eq.${investorId},org_id.eq.${orgId}`);
-      } else {
-        query = query.eq("org_id", orgId);
+      const parsedInvestorId = parseInt(investorId, 10);
+      if (isNaN(parsedInvestorId)) {
+        return NextResponse.json(
+          { error: "Invalid investor ID" },
+          { status: 400 }
+        );
       }
+      query = query.eq("investor_id", parsedInvestorId);
+    } else {
+      // If no specific investor ID, show statements for the current user's contact
+      query = query.eq("investor_id", contact.id);
     }
 
-    // Check if user is part of any organizations and include those statements as well
-    // (Only if they're a balance sheet investor)
-    if (authUserProfiles?.role === "balance_sheet_investor" && !orgId) {
-      const { data: userOrgs } = await supabase
-        .from("user_clerk_org_members")
-        .select("org_id")
-        .eq("user_id", user.id);
-
-      if (userOrgs && userOrgs.length > 0) {
-        const orgIds = userOrgs.map((org) => org.org_id);
-
-        // If we're already filtering by investorId, use an OR condition
-        if (investorId) {
-          query = query.or(
-            `investor_id.eq.${investorId},org_id.in.(${orgIds.join(",")})`
-          );
-        } else {
-          query = query.in("org_id", orgIds);
-        }
+    // Admin users can access more data
+    if (authUserProfile.clerk_role === "admin") {
+      // Admins can access all statements if no specific filters are provided
+      if (!investorId) {
+        query = supabase.from("bs_investor_statements").select("*");
       }
     }
 
