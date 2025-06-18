@@ -55,9 +55,9 @@ export async function createDeal(formData: FormData) {
   try {
     const supabase = await getSupabaseClient();
 
-    // 1. Find the user's contact_id via auth_user_profiles
+    // 1. Find the user's contact_id via user_profile
     const { data: userProfile, error: userProfileError } = await supabase
-      .from("auth_user_profiles")
+      .from("user_profile")
       .select("email")
       .eq("clerk_id", userId)
       .single();
@@ -177,9 +177,9 @@ export async function updateDeal(formData: FormData) {
   try {
     const supabase = await getSupabaseClient();
 
-    // 1. Find the user's contact_id via auth_user_profiles
+    // 1. Find the user's contact_id via user_profile
     const { data: userProfile, error: userProfileError } = await supabase
-      .from("auth_user_profiles")
+      .from("user_profile")
       .select("email")
       .eq("clerk_id", userId)
       .single();
@@ -254,9 +254,9 @@ export async function deleteDeal(id: string) {
   try {
     const supabase = await getSupabaseClient();
 
-    // 1. Find the user's contact_id via auth_user_profiles
+    // 1. Find the user's contact_id via user_profile
     const { data: userProfile, error: userProfileError } = await supabase
-      .from("auth_user_profiles")
+      .from("user_profile")
       .select("email")
       .eq("clerk_id", userId)
       .single();
