@@ -172,7 +172,7 @@ USING (
     SELECT DISTINCT dr.deal_id 
     FROM deal_roles dr
     JOIN contact c ON dr.contact_id = c.id
-    JOIN auth_user_profiles aup ON c.email_address = aup.email
+    JOIN auth_user_profile aup ON c.email_address = aup.email
     WHERE aup.clerk_id = auth.jwt() ->> 'clerk_user_id'
   )
 );

@@ -151,7 +151,7 @@ export default function DocumentsPage() {
 
       // Get user profile to check role
       const { data: authUserProfiles } = await supabase
-        .from("auth_user_profiles")
+        .from("auth_user_profile")
         .select("role")
         .eq("id", Number(user.id))
         .single();

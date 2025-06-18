@@ -31,29 +31,23 @@ try {
   process.exit(1);
 }
 
-// Test 2: Database Connection
-console.log('\n2️⃣  Testing database connection...');
-const testConnection = async () => {
-  try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    // Try to query a simple table that should exist
-    const { data, error } = await supabase
-      .from('contact_types')
-      .select('id')
-      .limit(1);
-    
-    if (error) {
-      console.log('   ⚠️  Database connection test failed:', error.message);
-      console.log('   💡 This might be due to RLS policies (which is expected)');
-    } else {
-      console.log('   ✅ Database connection successful');
-      console.log(`   📊 Query returned ${data?.length || 0} rows`);
-    }
-  } catch (error) {
-    console.log('   ❌ Connection error:', error.message);
+// Test 2: Try to fetch from a known table
+console.log("\n2. Testing table access...");
+try {
+  const { data, error } = await supabase
+    .from("auth_user_profile")
+    .select("id, clerk_id, email")
+    .limit(1);
+
+  if (error) {
+    console.error("❌ Error accessing auth_user_profile table:", error.message);
+  } else {
+    console.log("✅ Successfully accessed auth_user_profile table");
+    console.log(`   Found ${data.length} records`);
   }
-};
+} catch (err) {
+  console.error("❌ Exception accessing auth_user_profile table:", err.message);
+}
 
 // Test 3: Table Structure Validation
 console.log('\n3️⃣  Validating key table structures...');
@@ -166,7 +160,6 @@ const checkEnvironment = () => {
 
 // Run all tests
 const runTests = async () => {
-  await testConnection();
   await testTableStructures();
   testValidation();
   checkEnvironment();

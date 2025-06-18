@@ -129,6 +129,24 @@ export async function uploadDocument(formData: FormData) {
       throw new Error("Invalid property ID");
     }
 
+    // 1. Find the user's contact_id via auth_user_profile
+    const { data: userProfile, error: userProfileError } = await supabase
+      .from("auth_user_profile")
+      .select("email")
+      .eq("clerk_id", userId)
+      .single();
+
+    if (userProfileError || !userProfile) {
+      throw new Error("User profile not found");
+    }
+
+    // 2. Find the contact_id using the email
+    const { data: contact, error: contactError } = await supabase
+      .from("contact")
+      .select("id")
+      .eq("email_address", userProfile.email)
+      .single();
+
     // Insert document record
     const { data, error } = await supabase
       .from("document_files")

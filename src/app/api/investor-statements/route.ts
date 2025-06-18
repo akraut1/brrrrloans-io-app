@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     // Get user profile to check if they're a balance sheet investor or admin
     const { data: authUserProfile, error: profileError } = await supabase
-      .from("auth_user_profiles")
+      .from("auth_user_profile")
       .select("clerk_role, email")
       .eq("clerk_id", userId)
       .single();
