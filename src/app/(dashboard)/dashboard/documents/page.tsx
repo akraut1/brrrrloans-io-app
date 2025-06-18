@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Download, Plus, Search, BarChart, FileText } from "lucide-react";
-import { createClerkSupabaseClient } from "@/lib/supabase";
+import { useSupabase } from "@/hooks/use-supabase";
 import { useUser } from "@/hooks/use-clerk-auth";
 import type { Tables } from "@/types/supabase";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -82,7 +82,7 @@ export default function DocumentsPage() {
 
     setIsLoading(true);
     try {
-      const supabase = createClerkSupabaseClient();
+      const supabase = useSupabase();
 
       // Start with a query that filters by the current user's ID
       // RLS will enforce this anyway, but it's good practice to be explicit
@@ -140,7 +140,7 @@ export default function DocumentsPage() {
     setIsStatementsLoading(true);
     try {
       // Use the Supabase client directly for authenticated queries
-      const supabase = createClerkSupabaseClient();
+      const supabase = useSupabase();
 
       // Get the user's contact ID (for investor role check)
       const { data: contactData } = await supabase
@@ -249,7 +249,7 @@ export default function DocumentsPage() {
   const handleStatementDownload = async (statement: InvestorStatement) => {
     try {
       if (statement.file_path) {
-        const supabase = createClerkSupabaseClient();
+        const supabase = useSupabase();
         const { data, error } = await supabase.storage
           .from("investor-statements")
           .download(statement.file_path);

@@ -44,7 +44,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { createClerkSupabaseClient } from "@/lib/supabase";
+import { useSupabase } from "@/hooks/use-supabase";
+import { useUser } from "@/hooks/use-clerk-auth";
+import { LoadingAuth } from "@/components/loading-auth";
 
 // Define the form schema with validation
 const formSchema = z.object({
@@ -80,6 +82,7 @@ export function CreateDistributionForm({
   const [totalAmount, setTotalAmount] = useState<string>("0");
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { user } = useUser();
 
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -102,7 +105,7 @@ export function CreateDistributionForm({
     async function fetchDeals() {
       setIsLoading(true);
       try {
-        const supabase = createClerkSupabaseClient();
+        const supabase = useSupabase();
         const { data, error } = await supabase
           .from("deal")
           .select("id, name")
@@ -133,7 +136,7 @@ export function CreateDistributionForm({
 
       try {
         // Fetch investors for this deal
-        const supabase = createClerkSupabaseClient();
+        const supabase = useSupabase();
         const { data, error } = await supabase
           .from("deal_contacts")
           .select(
@@ -292,7 +295,7 @@ export function CreateDistributionForm({
     }).format(number);
   };
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <LoadingAuth />;
   }
 

@@ -37,6 +37,8 @@ import {
   Plus,
   Trash,
   Upload,
+  Loader2,
+  Search,
 } from "lucide-react";
 import { format } from "date-fns";
 import type { InvestorStatement } from "@/types/investor-statements";
@@ -59,7 +61,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface Investor {
   id: number;
