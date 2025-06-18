@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     // Get user profile to check if they're a balance sheet investor or admin
     const { data: authUserProfile, error: profileError } = await supabase
       .from("auth_user_profile")
-      .select("clerk_role, email")
+      .select("role, email")
       .eq("clerk_id", userId)
       .single();
 
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Admin users can access more data
-    if (authUserProfile.clerk_role === "admin") {
+    if (authUserProfile.role === "admin") {
       // Admins can access all statements if no specific filters are provided
       if (!investorId) {
         query = supabase.from("bs_investor_statements").select("*");
