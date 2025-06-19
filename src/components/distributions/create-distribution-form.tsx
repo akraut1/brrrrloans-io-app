@@ -147,36 +147,44 @@ export function CreateDistributionForm({
       }
 
       try {
-        // Fetch investors for this deal using bsi_deals table
-        const { data, error } = await supabase
+        // First, get the contact IDs from bsi_deals for this deal
+        const { data: dealData, error: dealError } = await supabase
           .from("bsi_deals")
-          .select(
-            `
-            contact_id,
-            deal_id,
-            contact:contact_id (
-              id,
-              first_name,
-              last_name,
-              email_address
-            )
-          `
-          )
+          .select("contact_id")
           .eq("deal_id", Number(watchDealId));
 
-        if (error) {
-          console.error("Supabase error:", error);
-          throw new Error(error.message || "Unknown database error");
+        if (dealError) {
+          console.error("Supabase error fetching deal contacts:", dealError);
+          throw new Error(dealError.message || "Unknown database error");
+        }
+
+        if (!dealData || dealData.length === 0) {
+          setInvestors([]);
+          setInvestorPayments([]);
+          return;
+        }
+
+        // Get the contact IDs
+        const contactIds = dealData.map((item) => item.contact_id);
+
+        // Then fetch the contact details for those IDs
+        const { data: contactsData, error: contactsError } = await supabase
+          .from("contact")
+          .select("id, first_name, last_name, email_address")
+          .in("id", contactIds);
+
+        if (contactsError) {
+          console.error("Supabase error fetching contacts:", contactsError);
+          throw new Error(contactsError.message || "Unknown database error");
         }
 
         // Format the data
-        const formattedInvestors = (data || []).map((item) => ({
-          id: item.contact_id.toString(),
+        const formattedInvestors = (contactsData || []).map((contact) => ({
+          id: contact.id.toString(),
           name:
-            `${item.contact?.first_name || ""} ${
-              item.contact?.last_name || ""
-            }`.trim() || "Unknown",
-          email: item.contact?.email_address || "",
+            `${contact.first_name || ""} ${contact.last_name || ""}`.trim() ||
+            "Unknown",
+          email: contact.email_address || "",
           investment: 0, // TODO: Get this from appropriate table
           percentage: 0, // TODO: Get this from appropriate table
         }));
@@ -320,241 +328,243 @@ export function CreateDistributionForm({
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="dealId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Deal</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a deal" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {deals.map((deal) => (
-                      <SelectItem key={deal.id} value={deal.id}>
-                        {deal.name}
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="dealId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Deal</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a deal" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {deals.map((deal) => (
+                        <SelectItem key={deal.id} value={deal.id}>
+                          {deal.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="distributionType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Distribution Type</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Monthly Interest">
+                        Monthly Interest
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                      <SelectItem value="Quarterly Dividend">
+                        Quarterly Dividend
+                      </SelectItem>
+                      <SelectItem value="Annual Distribution">
+                        Annual Distribution
+                      </SelectItem>
+                      <SelectItem value="Capital Return">
+                        Capital Return
+                      </SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="distributionType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Distribution Type</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+            <FormField
+              control={form.control}
+              name="totalAmount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Total Distribution Amount</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
+                    <Input
+                      placeholder="$10,000"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                      }}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Monthly Interest">
-                      Monthly Interest
-                    </SelectItem>
-                    <SelectItem value="Quarterly Dividend">
-                      Quarterly Dividend
-                    </SelectItem>
-                    <SelectItem value="Annual Distribution">
-                      Annual Distribution
-                    </SelectItem>
-                    <SelectItem value="Capital Return">
-                      Capital Return
-                    </SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormDescription>
+                    Total amount to be distributed to all investors
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="distributionDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Distribution Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Scheduled">Scheduled</SelectItem>
+                      <SelectItem value="Processing">Processing</SelectItem>
+                      <SelectItem value="Completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormField
             control={form.control}
-            name="totalAmount"
+            name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Total Distribution Amount</FormLabel>
+                <FormLabel>Notes</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="$10,000"
+                  <Textarea
+                    placeholder="Enter any additional notes about this distribution"
+                    className="min-h-[80px]"
                     {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                    }}
                   />
                 </FormControl>
-                <FormDescription>
-                  Total amount to be distributed to all investors
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="distributionDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Distribution Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Scheduled">Scheduled</SelectItem>
-                    <SelectItem value="Processing">Processing</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Enter any additional notes about this distribution"
-                  className="min-h-[80px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {investors.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Investor Payments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Investor</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Investment %</TableHead>
-                    <TableHead>Payment Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {investors.map((investor, index) => (
-                    <TableRow key={investor.id}>
-                      <TableCell>{investor.name}</TableCell>
-                      <TableCell>{investor.email}</TableCell>
-                      <TableCell>{investor.percentage}%</TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={investorPayments[index]?.amount || "0"}
-                          onChange={(e) =>
-                            updateInvestorPayment(index, e.target.value)
-                          }
-                          className="w-32"
-                        />
-                      </TableCell>
+          {investors.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Investor Payments</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Investor</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Investment %</TableHead>
+                      <TableHead>Payment Amount</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="mt-4 text-right">
-                <p className="text-sm text-muted-foreground">
-                  Total: {formatCurrency(totalAmount)}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  </TableHeader>
+                  <TableBody>
+                    {investors.map((investor, index) => (
+                      <TableRow key={investor.id}>
+                        <TableCell>{investor.name}</TableCell>
+                        <TableCell>{investor.email}</TableCell>
+                        <TableCell>{investor.percentage}%</TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={investorPayments[index]?.amount || "0"}
+                            onChange={(e) =>
+                              updateInvestorPayment(index, e.target.value)
+                            }
+                            className="w-32"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="mt-4 text-right">
+                  <p className="text-sm text-muted-foreground">
+                    Total: {formatCurrency(totalAmount)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting || investors.length === 0}
-          >
-            {isSubmitting ? "Creating..." : "Create Distribution"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+          <div className="flex justify-end space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || investors.length === 0}
+            >
+              {isSubmitting ? "Creating..." : "Create Distribution"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </>
   );
 }
