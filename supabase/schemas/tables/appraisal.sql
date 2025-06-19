@@ -24,4 +24,12 @@ CREATE TABLE public.appraisal (
   value_conclusion_as_is numeric NULL,
   value_conclusion_as_repaired numeric NULL,
   value_conclusion_fair_market_rent numeric NULL
-); 
+);
+
+-- Add foreign key constraints
+ALTER TABLE public.appraisal ADD CONSTRAINT appraisal_appraiser_id_fkey FOREIGN KEY (appraiser_id) REFERENCES public.contact (id);
+ALTER TABLE public.appraisal ADD CONSTRAINT appraisal_co_amc_fkey FOREIGN KEY (co_amc) REFERENCES public.company (co_id);
+ALTER TABLE public.appraisal ADD CONSTRAINT appraisal_co_appraisal_fkey FOREIGN KEY (co_appraisal) REFERENCES public.company (co_id);
+ALTER TABLE public.appraisal ADD CONSTRAINT appraisal_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.deal (id);
+ALTER TABLE public.appraisal ADD CONSTRAINT appraisal_document_id_fkey FOREIGN KEY (document_id) REFERENCES public.document_files (id);
+ALTER TABLE public.appraisal ADD CONSTRAINT appraisal_property_id_fkey FOREIGN KEY (property_id) REFERENCES public.property (id); 

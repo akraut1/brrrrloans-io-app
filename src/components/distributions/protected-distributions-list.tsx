@@ -38,7 +38,7 @@ function UnprotectedDistributionsList({ dealId }: DistributionsListProps) {
   useEffect(() => {
     async function fetchDistributions() {
       let query = supabase
-        .from("bs_investor_distributions")
+        .from("bsi_distributions")
         .select(
           `
           *,

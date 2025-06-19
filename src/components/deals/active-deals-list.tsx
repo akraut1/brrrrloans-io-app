@@ -33,7 +33,7 @@ function UnprotectedActiveDealsList() {
     async function fetchDeals() {
       // First, get all deal_ids for this investor
       const { data: investorDeals, error: investorDealsError } = await supabase
-        .from("bs_investor_deals")
+        .from("bsi_deals")
         .select("deal_id");
 
       if (investorDealsError || !investorDeals) {

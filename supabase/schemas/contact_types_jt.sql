@@ -1,0 +1,2 @@
+alter table "public"."contact_types_jt" add constraint "contact_types_jt_contact_id_fkey" foreign key ("contact_id") references "public"."contact" ("id");
+alter table "public"."contact_types_jt" add constraint "contact_types_jt_contact_types_id_fkey" foreign key ("contact_types_id") references "public"."contact_types" ("id"); 

@@ -1215,7 +1215,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_class WHERE relname = 'Documents_pkey'
   ) THEN
-    CREATE UNIQUE INDEX "Documents_pkey" ON public.document_files USING btree (id);
+CREATE UNIQUE INDEX "Documents_pkey" ON public.document_files USING btree (id);
   END IF;
 END$$;
 
@@ -1338,8 +1338,6 @@ DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'property_reap
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'rate_adjustment_pkey') THEN CREATE UNIQUE INDEX rate_adjustment_pkey ON public.rate_adjustment USING btree (id); END IF; END$$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'task_templates_pkey') THEN CREATE UNIQUE INDEX task_templates_pkey ON public.task_templates USING btree (id); END IF; END$$;
-
-DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'transaction_references_pkey') THEN CREATE UNIQUE INDEX transaction_references_pkey ON public.bs_investor_transactions_references USING btree (id); END IF; END$$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'unique_company_contact') THEN CREATE UNIQUE INDEX unique_company_contact ON public.company_contact USING btree (co_id, contact_id, deal_id); END IF; END$$;
 
@@ -1718,7 +1716,7 @@ BEGIN
     SELECT 1 FROM pg_constraint WHERE conname = 'property_pkey'
   ) THEN
     ALTER TABLE "public"."property" ADD CONSTRAINT "property_pkey" PRIMARY KEY USING INDEX "property_pkey";
-  END IF;
+    END IF;
 END$$;
 
 DO $$
@@ -1736,7 +1734,7 @@ BEGIN
     SELECT 1 FROM pg_constraint WHERE conname = 'property_data_reapi_pkey'
   ) THEN
     ALTER TABLE "public"."property_reapi" ADD CONSTRAINT "property_data_reapi_pkey" PRIMARY KEY USING INDEX "property_data_reapi_pkey";
-  END IF;
+      END IF;
 END$$;
 
 DO $$

@@ -21,4 +21,11 @@ CREATE TABLE public.document_files (
   private_notes text NULL,
   public_notes text NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now()
-); 
+);
+
+-- Add foreign key constraints
+ALTER TABLE "public"."document_files" ADD CONSTRAINT "document_files_deal_id_fkey" FOREIGN KEY ("deal_id") REFERENCES "public"."deal" ("id");
+ALTER TABLE "public"."document_files" ADD CONSTRAINT "document_files_borrower_id_fkey" FOREIGN KEY ("borrower_id") REFERENCES "public"."borrower" ("id");
+ALTER TABLE "public"."document_files" ADD CONSTRAINT "document_files_entity_id_fkey" FOREIGN KEY ("entity_id") REFERENCES "public"."company" ("co_id");
+ALTER TABLE "public"."document_files" ADD CONSTRAINT "document_files_property_id_fkey" FOREIGN KEY ("property_id") REFERENCES "public"."property" ("id");
+ALTER TABLE "public"."document_files" ADD CONSTRAINT "document_files_guarantor_id_fkey" FOREIGN KEY ("guarantor_id") REFERENCES "public"."guarantor" ("guarantor_id"); 

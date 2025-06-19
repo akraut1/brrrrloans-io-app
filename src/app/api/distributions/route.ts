@@ -12,9 +12,9 @@ export async function GET(request: Request) {
 
     const supabase = await getSupabaseClient();
 
-    // Map Clerk userId to contact_id (investor_id) using auth_user_profiles
+    // Map Clerk userId to contact_id (investor_id) using another method (auth_user_profiles table is dropped)
     const { data: profile, error: profileError } = await supabase
-      .from("auth_user_profiles")
+      .from("bsi_distributions")
       .select("contact_id")
       .eq("clerk_id", userId)
       .single();
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
     // Query distributions for this investor
     let query = supabase
-      .from("bs_investor_distributions")
+      .from("bsi_distributions")
       .select(
         `
         *,
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
 
     // The returned data is: Array<{ ...bs_investor_distributions fields..., deal: Pick<Tables<"deal">, "deal_name"> }>
     return NextResponse.json(
-      (data || []) as (Tables<"bs_investor_distributions"> & {
+      (data || []) as (Tables<"bsi_distributions"> & {
         deal: Pick<Tables<"deal">, "deal_name">;
       })[]
     );

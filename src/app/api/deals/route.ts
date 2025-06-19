@@ -19,9 +19,9 @@ export async function GET(request: Request) {
     const type = searchParams.get("type") ?? "";
     const search = searchParams.get("search") ?? "";
 
-    // 1. Find the user in auth_user_profiles
+    // 1. Find the user in another table (auth_user_profiles table is dropped)
     const { data: userProfile, error: userProfileError } = await supabase
-      .from("auth_user_profiles")
+      .from("bsi_deals")
       .select("email")
       .eq("clerk_id", userId)
       .single();
@@ -56,9 +56,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
-    // 3. Query bs_investor_deals using the correct contact_id
+    // 3. Query bsi_investor_deals using the correct contact_id
     let query = supabase
-      .from("bs_investor_deals")
+      .from("bsi_investor_deals")
       .select(
         `
         *,
@@ -91,14 +91,16 @@ export async function GET(request: Request) {
 
     // After fetching all user_profile rows:
     const { data: allClerkIds } = await supabase
-      .from("auth_user_profiles")
+      .from("bsi_deals")
       .select("clerk_id");
 
     console.log("All clerk_ids in DB:", allClerkIds);
 
-    // The returned data is: Array<{ ...bs_investor_deals fields..., deal: Tables<"deal"> }>
+    // The returned data is: Array<{ ...bsi_investor_deals fields..., deal: Tables<"deal"> }>
     return NextResponse.json(
-      (data || []) as (Tables<"bs_investor_deals"> & { deal: Tables<"deal"> })[]
+      (data || []) as (Tables<"bsi_investor_deals"> & {
+        deal: Tables<"deal">;
+      })[]
     );
   } catch (error) {
     console.error("Unexpected error:", error);

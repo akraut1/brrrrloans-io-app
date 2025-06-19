@@ -35,7 +35,7 @@ export async function createDistribution(formData: FormData) {
     const investorPayments = JSON.parse(investorPaymentsJson);
 
     // Insert distribution record directly
-    const { error } = await supabase.from("bs_investor_distributions").insert({
+    const { error } = await supabase.from("bsi_distributions").insert({
       deal_id: Number(dealId),
       created_at: new Date().toISOString(),
       notes: typeof notes === "string" ? notes : null,
@@ -46,9 +46,7 @@ export async function createDistribution(formData: FormData) {
       loan_amount_snapshot: 0,
       principal_amount: 0,
       rate_of_return_pct: 0,
-      servicing_fee: 0,
       statement_id: "dummy-statement-id",
-      wire_fee: 0,
     });
 
     if (error) {
@@ -74,7 +72,7 @@ export async function updateDistributionStatus(id: string, status: string) {
   try {
     // Update distribution (no status or updated_by fields in Supabase types)
     const { error } = await supabase
-      .from("bs_investor_distributions")
+      .from("bsi_distributions")
       .update({
         updated_at: new Date().toISOString(),
       })
@@ -103,7 +101,7 @@ export async function deleteDistribution(id: string) {
   try {
     // Check if the distribution is in a state that allows deletion
     const { data: distribution, error: checkError } = await supabase
-      .from("bs_investor_distributions")
+      .from("bsi_distributions")
       .select("*")
       .eq("id", id)
       .single();
@@ -129,7 +127,7 @@ export async function deleteDistribution(id: string) {
 
     // Delete the distribution
     const { error } = await supabase
-      .from("bs_investor_distributions")
+      .from("bsi_distributions")
       .delete()
       .eq("id", id);
 

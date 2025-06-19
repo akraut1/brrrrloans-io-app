@@ -1,17 +1,16 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+export default function DashboardLayout({ children }: { children: any }) {
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <main className="flex flex-1 flex-col border-radius: 12px bg-background">
+        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6 flex-1">
           {children}
-        </main>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

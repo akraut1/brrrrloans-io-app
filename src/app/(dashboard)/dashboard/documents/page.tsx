@@ -171,7 +171,7 @@ export default function DocumentsPage() {
       }
 
       // Query directly via Supabase instead of API route
-      let query = supabase.from("bs_investor_statements").select("*");
+      let query = supabase.from("bsi_statements").select("*");
 
       // If investor, filter by their ID
       if (isInvestor && contactData && "id" in contactData) {

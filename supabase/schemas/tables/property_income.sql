@@ -13,4 +13,7 @@ CREATE TABLE public.property_income (
   market_rent_fmr numeric NULL,
   created_at timestamp with time zone NULL DEFAULT now(),
   updated_at timestamp with time zone NULL
-); 
+);
+
+-- Add foreign key constraint for property_id (property.id)
+ALTER TABLE "public"."property_income" ADD CONSTRAINT "property_income_property_id_fkey" FOREIGN KEY ("property_id") REFERENCES "public"."property" ("id"); 

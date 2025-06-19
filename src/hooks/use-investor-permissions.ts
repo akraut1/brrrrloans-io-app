@@ -24,7 +24,7 @@ export function useInvestorPermissions(): InvestorPermissions {
     }
 
     const { data, error } = await supabase
-      .from("bs_investor_deals")
+      .from("bsi_deals")
       .select("deal_id")
       .eq("deal_id", Number(dealId))
       .single();
@@ -66,7 +66,7 @@ export function useInvestorPermissions(): InvestorPermissions {
     }
 
     const { data, error } = await supabase
-      .from("bs_investor_transactions")
+      .from("bsi_transactions")
       .select("id, ledger_entry_type")
       .eq("id", Number(contributionId))
       .eq("ledger_entry_type", "contribution")
@@ -86,7 +86,7 @@ export function useInvestorPermissions(): InvestorPermissions {
     }
 
     const { data, error } = await supabase
-      .from("bs_investor_transactions")
+      .from("bsi_transactions")
       .select("id, ledger_entry_type")
       .eq("id", Number(distributionId))
       .eq("ledger_entry_type", "interest")

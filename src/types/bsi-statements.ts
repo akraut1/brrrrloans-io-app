@@ -9,5 +9,4 @@ export interface BsiStatement {
   total_upb_close: string; // numeric, not null
   total_interest: string; // numeric, not null
   total_principal: string | null; // numeric, nullable
-  total_fees: string; // numeric, not null
 }

@@ -3,8 +3,6 @@ export interface BsiDistribution {
   deal_id: string | null; // bigint, nullable
   rate_of_return_pct: string; // numeric(5,4)
   interest_amount: string; // numeric(15,2)
-  servicing_fee: string; // numeric(15,2)
-  wire_fee: string; // numeric(15,2)
   deposit_amount: string; // numeric(15,2)
   notes: string | null; // text, nullable
   created_at: string | null; // timestamp with time zone, nullable

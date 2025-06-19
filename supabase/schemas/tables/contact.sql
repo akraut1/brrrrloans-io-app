@@ -19,7 +19,7 @@ CREATE TABLE public.contact (
   user_id bigint NULL,
   CONSTRAINT contact_pkey PRIMARY KEY (id),
   CONSTRAINT contact_company_id_fkey FOREIGN KEY (company_id) REFERENCES company (co_id),
-  CONSTRAINT contact_user_id_fkey FOREIGN KEY (user_id) REFERENCES user_profile (id)
+  CONSTRAINT contact_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth_user_profiles (id)
 );
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON contact FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime('updated_at');
 ALTER TABLE public.contact ENABLE ROW LEVEL SECURITY;

@@ -20,16 +20,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user profile to check if they're a balance sheet investor or admin
-    const { data: authUserProfiles } = await supabase
-      .from("auth_user_profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
     // Query the database for investor statements
     // RLS will automatically filter statements based on user permissions
-    let query = supabase.from("bs_investor_statements").select("*");
+    let query = supabase.from("bsi_statements").select("*");
 
     // If investorId is provided, filter by it
     if (investorId) {

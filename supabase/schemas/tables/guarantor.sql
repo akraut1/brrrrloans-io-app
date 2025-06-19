@@ -57,4 +57,8 @@ CREATE TABLE public.guarantor (
   previous_residence_occupancy_end_date date NULL,
   created_at timestamp with time zone NULL DEFAULT (now() AT TIME ZONE 'utc'::text),
   updated_at timestamp with time zone NULL DEFAULT (now() AT TIME ZONE 'utc'::text)
-); 
+);
+
+-- Add foreign key constraints
+ALTER TABLE public.guarantor ADD CONSTRAINT guarantor_borrower_id_fkey FOREIGN KEY (borrower_id) REFERENCES public.borrower (id);
+ALTER TABLE public.guarantor ADD CONSTRAINT guarantor_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.deal (id); 

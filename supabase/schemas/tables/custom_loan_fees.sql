@@ -6,4 +6,7 @@ CREATE TABLE public.custom_loan_fees (
   fee_amount numeric NULL,
   fee_description text NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now()
-); 
+);
+
+-- Add foreign key constraint for deal_id (references deal.id)
+ALTER TABLE "public"."custom_loan_fees" ADD CONSTRAINT "custom_loan_fees_deal_id_fkey" FOREIGN KEY ("deal_id") REFERENCES "public"."deal" ("id"); 

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Tables } from "@/types/supabase";
 
-type Distribution = Tables<"bs_investor_distributions">;
+type Distribution = Tables<"bsi_distributions">;
 
 interface UseDistributionsOptions {
   status?: string;

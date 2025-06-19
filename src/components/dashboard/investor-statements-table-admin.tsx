@@ -82,7 +82,6 @@ const formSchema = z.object({
   totalUpbClose: z.coerce.number().min(0, "Amount must be positive"),
   totalInterest: z.coerce.number().min(0, "Amount must be positive"),
   totalPrincipal: z.coerce.number().min(0, "Amount must be positive"),
-  totalFees: z.coerce.number().min(0, "Amount must be positive"),
   statementFile: z.instanceof(File).optional(),
 });
 
@@ -102,7 +101,6 @@ export function InvestorStatementsAdmin() {
       totalUpbClose: 0,
       totalInterest: 0,
       totalPrincipal: 0,
-      totalFees: 0,
     },
   });
 
@@ -116,7 +114,7 @@ export function InvestorStatementsAdmin() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from("bs_investor_statements")
+        .from("bsi_statements")
         .select("*")
         .order("statement_date", { ascending: false });
 
@@ -202,7 +200,7 @@ export function InvestorStatementsAdmin() {
 
       // Delete the statement record
       const { error } = await supabase
-        .from("bs_investor_statements")
+        .from("bsi_statements")
         .delete()
         .eq("id", id);
 
@@ -268,7 +266,7 @@ export function InvestorStatementsAdmin() {
 
       // Insert statement record in the database
       const { data, error } = await supabase
-        .from("bs_investor_statements")
+        .from("bsi_statements")
         .insert({
           investor_id: parseInt(values.investorId),
           org_id: values.orgId || null,
@@ -279,7 +277,6 @@ export function InvestorStatementsAdmin() {
           total_upb_close: values.totalUpbClose,
           total_interest: values.totalInterest,
           total_principal: values.totalPrincipal,
-          total_fees: values.totalFees,
           file_path: filePath,
           file_name: fileName,
           file_type: fileType,
@@ -584,20 +581,6 @@ export function InvestorStatementsAdmin() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Principal</FormLabel>
-                        <FormControl>
-                          <Input type="number" step="0.01" min="0" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="totalFees"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Fees</FormLabel>
                         <FormControl>
                           <Input type="number" step="0.01" min="0" {...field} />
                         </FormControl>

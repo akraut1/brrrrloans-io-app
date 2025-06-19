@@ -24,4 +24,7 @@ CREATE TABLE public.payroll_submission (
   expense_misc_ppcc_usd numeric NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NULL
-); 
+);
+
+-- Add foreign key constraint for deal_id
+ALTER TABLE public.payroll_submission ADD CONSTRAINT payroll_submission_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.deal (id); 

@@ -50,7 +50,7 @@ export default function DistributionsPage() {
       search: searchTerm || undefined,
     });
 
-  // The API returns: (Tables<"bs_investor_distributions"> & { deal: Pick<Tables<"deal">, "deal_name"> })[]
+  // The API returns: (Tables<"bsi_distributions"> & { deal: Pick<Tables<"deal">, "deal_name"> })[]
   // Map to a UI-friendly shape
   const distributions: Array<{
     id: string;
