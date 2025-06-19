@@ -56,9 +56,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
-    // 3. Query bsi_investor_deals using the correct contact_id
+    // 3. Query bsi_deals using the correct contact_id
     let query = supabase
-      .from("bsi_investor_deals")
+      .from("bsi_deals")
       .select(
         `
         *,
@@ -67,20 +67,20 @@ export async function GET(request: Request) {
       )
       .eq("contact_id", Number(contact.id ?? 0));
 
-    // Apply filters if provided
-    if (status) {
-      query = query.eq("deal.status", status);
-    }
+    // Apply filters if provided (note: these may need adjustment based on actual deal table structure)
+    // if (status) {
+    //   query = query.eq("deal.deal_disposition_1", status);
+    // }
 
-    if (type) {
-      query = query.eq("deal.type", type);
-    }
+    // if (type) {
+    //   query = query.eq("deal.deal_type", type);
+    // }
 
-    if (search) {
-      query = query.or(
-        `deal.name.ilike.%${search}%,deal.id.ilike.%${search}%,deal.location.ilike.%${search}%`
-      );
-    }
+    // if (search) {
+    //   query = query.or(
+    //     `deal.deal_name.ilike.%${search}%,deal.id.ilike.%${search}%`
+    //   );
+    // }
 
     const { data, error } = await query;
 
@@ -96,9 +96,9 @@ export async function GET(request: Request) {
 
     console.log("All clerk_ids in DB:", allClerkIds);
 
-    // The returned data is: Array<{ ...bsi_investor_deals fields..., deal: Tables<"deal"> }>
+    // The returned data is: Array<{ ...bsi_deals fields..., deal: Tables<"deal"> }>
     return NextResponse.json(
-      (data || []) as (Tables<"bsi_investor_deals"> & {
+      (data || []) as (Tables<"bsi_deals"> & {
         deal: Tables<"deal">;
       })[]
     );
