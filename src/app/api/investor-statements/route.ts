@@ -1,71 +1,54 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseClient } from "@/lib/supabase-server";
+import { auth } from "@clerk/nextjs/server";
+import type { Tables } from "@/types/supabase";
 
 export async function GET(request: NextRequest) {
   try {
-    // Parse the request URL to get query parameters
     const url = new URL(request.url);
-    const investorId = url.searchParams.get("investorId");
-    const orgId = url.searchParams.get("orgId");
+    const investorIdParam = url.searchParams.get("investorId");
+    // const orgId = url.searchParams.get("orgId"); // Not used
 
-    const supabase = createRouteHandlerClient({ cookies });
-
-    // Check if user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Query the database for investor statements
-    // RLS will automatically filter statements based on user permissions
-    let query = supabase.from("bsi_statements").select("*");
+    const supabase = await getSupabaseClient();
 
-    // If investorId is provided, filter by it
-    if (investorId) {
-      query = query.eq("investor_id", investorId);
+    // Map Clerk userId to contact_id (investor_id) using user_profile
+    const { data: profile, error: profileError } = await supabase
+      .from("auth_user_profile")
+      .select("contact_id, role")
+      .eq("clerk_id", userId)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: "User profile not found" },
+        { status: 404 }
+      );
     }
 
-    // If orgId is provided and user is either admin or balance sheet investor,
-    // include statements for that organization
-    if (
-      (orgId && authUserProfiles?.role === "admin") ||
-      authUserProfiles?.role === "balance_sheet_investor"
-    ) {
-      // If we're also filtering by investorId, use an OR condition
-      if (investorId) {
-        query = query.or(`investor_id.eq.${investorId},org_id.eq.${orgId}`);
-      } else {
-        query = query.eq("org_id", orgId);
+    let investorId: number | null = null;
+    if (investorIdParam) {
+      const parsedInvestorId = parseInt(investorIdParam, 10);
+      if (isNaN(parsedInvestorId)) {
+        return NextResponse.json(
+          { error: "Invalid investor ID" },
+          { status: 400 }
+        );
       }
+      investorId = parsedInvestorId;
+    } else {
+      investorId = Number(profile.contact_id ?? 0);
     }
 
-    // Check if user is part of any organizations and include those statements as well
-    // (Only if they're a balance sheet investor)
-    if (authUserProfiles?.role === "balance_sheet_investor" && !orgId) {
-      const { data: userOrgs } = await supabase
-        .from("user_clerk_org_members")
-        .select("org_id")
-        .eq("user_id", user.id);
-
-      if (userOrgs && userOrgs.length > 0) {
-        const orgIds = userOrgs.map((org) => org.org_id);
-
-        // If we're already filtering by investorId, use an OR condition
-        if (investorId) {
-          query = query.or(
-            `investor_id.eq.${investorId},org_id.in.(${orgIds.join(",")})`
-          );
-        } else {
-          query = query.in("org_id", orgIds);
-        }
-      }
-    }
-
-    // Order by date
+    // Only query bsi_statements
+    let query = supabase
+      .from("bsi_statements")
+      .select("*")
+      .eq("investor_id", investorId);
     query = query.order("statement_date", { ascending: false });
 
     const { data, error } = await query;

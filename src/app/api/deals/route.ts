@@ -19,9 +19,9 @@ export async function GET(request: Request) {
     const type = searchParams.get("type") ?? "";
     const search = searchParams.get("search") ?? "";
 
-    // 1. Find the user in another table (auth_user_profiles table is dropped)
+    // 1. Find the user in auth_user_profile
     const { data: userProfile, error: userProfileError } = await supabase
-      .from("bsi_deals")
+      .from("auth_user_profile")
       .select("email")
       .eq("clerk_id", userId)
       .single();
@@ -91,7 +91,7 @@ export async function GET(request: Request) {
 
     // After fetching all user_profile rows:
     const { data: allClerkIds } = await supabase
-      .from("bsi_deals")
+      .from("auth_user_profile")
       .select("clerk_id");
 
     console.log("All clerk_ids in DB:", allClerkIds);

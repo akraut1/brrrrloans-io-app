@@ -44,7 +44,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { createClerkSupabaseClient } from "@/lib/supabase";
+import { useSupabase } from "@/hooks/use-supabase";
+import { useUser } from "@/hooks/use-clerk-auth";
+import { LoadingAuth } from "@/components/loading-auth";
 
 // Define the form schema with validation
 const formSchema = z.object({
@@ -80,6 +82,8 @@ export function CreateDistributionForm({
   const [totalAmount, setTotalAmount] = useState<string>("0");
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { user } = useUser();
+  const supabase = useSupabase();
 
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -102,25 +106,36 @@ export function CreateDistributionForm({
     async function fetchDeals() {
       setIsLoading(true);
       try {
-        const supabase = createClerkSupabaseClient();
         const { data, error } = await supabase
           .from("deal")
-          .select("id, name")
-          .eq("status", "Active")
-          .order("name");
+          .select("id, deal_name")
+          .eq("deal_disposition_1", "active")
+          .order("deal_name");
 
-        if (error) throw error;
-        setDeals(data || []);
+        if (error) {
+          console.error("Supabase error:", error);
+          throw new Error(error.message || "Unknown database error");
+        }
+
+        // Format the data to match expected interface
+        const formattedDeals = (data || []).map((deal) => ({
+          id: deal.id.toString(),
+          name: deal.deal_name || `Deal ${deal.id}`,
+        }));
+
+        setDeals(formattedDeals);
       } catch (error) {
         console.error("Error fetching deals:", error);
-        toast.error("Failed to load deals");
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to load deals";
+        toast.error(errorMessage);
       } finally {
         setIsLoading(false);
       }
     }
 
     fetchDeals();
-  }, []);
+  }, [supabase]);
 
   // Fetch investors when deal changes
   useEffect(() => {
@@ -132,34 +147,38 @@ export function CreateDistributionForm({
       }
 
       try {
-        // Fetch investors for this deal
-        const supabase = createClerkSupabaseClient();
+        // Fetch investors for this deal using bsi_deals table
         const { data, error } = await supabase
-          .from("deal_contacts")
+          .from("bsi_deals")
           .select(
             `
             contact_id,
-            contacts:contact_id (
+            deal_id,
+            contact:contact_id (
               id,
-              name,
-              email
-            ),
-            investment_amount,
-            investment_percentage
+              first_name,
+              last_name,
+              email_address
+            )
           `
           )
-          .eq("deal_id", watchDealId)
-          .eq("role", "Investor");
+          .eq("deal_id", Number(watchDealId));
 
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase error:", error);
+          throw new Error(error.message || "Unknown database error");
+        }
 
         // Format the data
-        const formattedInvestors = data.map((item) => ({
-          id: item.contact_id,
-          name: item.contacts?.name || "Unknown",
-          email: item.contacts?.email || "",
-          investment: item.investment_amount || 0,
-          percentage: item.investment_percentage || 0,
+        const formattedInvestors = (data || []).map((item) => ({
+          id: item.contact_id.toString(),
+          name:
+            `${item.contact?.first_name || ""} ${
+              item.contact?.last_name || ""
+            }`.trim() || "Unknown",
+          email: item.contact?.email_address || "",
+          investment: 0, // TODO: Get this from appropriate table
+          percentage: 0, // TODO: Get this from appropriate table
         }));
 
         setInvestors(formattedInvestors);
@@ -172,12 +191,16 @@ export function CreateDistributionForm({
         setInvestorPayments(initialPayments);
       } catch (error) {
         console.error("Error fetching investors:", error);
-        toast.error("Failed to load investors for this deal");
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to load investors for this deal";
+        toast.error(errorMessage);
       }
     }
 
     fetchInvestors();
-  }, [watchDealId]);
+  }, [watchDealId, supabase]);
 
   // Update investor payment amounts when total amount changes
   useEffect(() => {
@@ -292,7 +315,7 @@ export function CreateDistributionForm({
     }).format(number);
   };
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <LoadingAuth />;
   }
 

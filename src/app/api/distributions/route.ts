@@ -12,9 +12,9 @@ export async function GET(request: Request) {
 
     const supabase = await getSupabaseClient();
 
-    // Map Clerk userId to contact_id (investor_id) using another method (auth_user_profiles table is dropped)
+    // Map Clerk userId to contact_id (investor_id) using user_profile
     const { data: profile, error: profileError } = await supabase
-      .from("bsi_distributions")
+      .from("auth_user_profile")
       .select("contact_id")
       .eq("clerk_id", userId)
       .single();
@@ -64,8 +64,7 @@ export async function GET(request: Request) {
     }
     if (status) query = query.eq("status", status);
     if (type) query = query.eq("distribution_type", type);
-    if (search)
-      query = query.or(`id.ilike.%${search}%,deal.deal_name.ilike.%${search}%`);
+    if (search) query = query.or(`id.ilike.%${search}%`);
 
     query = query.order("created_at", { ascending: false });
 
@@ -76,9 +75,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // The returned data is: Array<{ ...bs_investor_distributions fields..., deal: Pick<Tables<"deal">, "deal_name"> }>
+    // Filter by deal_name in JS if search is provided
+    let filteredData = data || [];
+    if (search) {
+      filteredData = filteredData.filter(
+        (row) =>
+          row.deal?.deal_name?.toLowerCase().includes(search.toLowerCase()) ||
+          String(row.id).includes(search)
+      );
+    }
+
     return NextResponse.json(
-      (data || []) as (Tables<"bsi_distributions"> & {
+      filteredData as (Tables<"bsi_distributions"> & {
         deal: Pick<Tables<"deal">, "deal_name">;
       })[]
     );

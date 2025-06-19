@@ -22,7 +22,7 @@ export default async function InvestorStatementsAdminPage() {
 
   // Check if the user is an admin
   const { data: userData } = await supabase
-    .from("auth_user_profiles")
+    .from("auth_user_profile")
     .select("role")
     .eq("id", user.id)
     .single();
@@ -33,6 +33,13 @@ export default async function InvestorStatementsAdminPage() {
     // If not an admin, redirect to dashboard
     redirect("/dashboard");
   }
+
+  // Get user profile to check if they're a balance sheet investor or admin
+  const { data: authUserProfile, error: profileError } = await supabase
+    .from("auth_user_profile")
+    .select("clerk_role")
+    .eq("clerk_id", user.id)
+    .single();
 
   return (
     <div className="container mx-auto py-8">

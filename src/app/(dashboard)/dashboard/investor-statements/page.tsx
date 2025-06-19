@@ -20,19 +20,19 @@ export default async function InvestorStatementsPage() {
     redirect("/sign-in");
   }
 
-  // Get the investor profile for the current user
-  const { data: contactData } = await supabase
-    .from("contact")
-    .select("id, contact_types_id")
+  // Get user profile to check if they're a balance sheet investor or admin
+  const { data: authUserProfile, error: profileError } = await supabase
+    .from("auth_user_profile")
+    .select("clerk_role")
     .eq("clerk_id", user.id)
     .single();
 
   // Check if the user is a Balance Sheet Investor (type_id = 12)
-  const isInvestor = contactData?.contact_types_id === 12;
+  const isInvestor = authUserProfile?.clerk_role === "Balance Sheet Investor";
 
   // Check if user is admin
   const { data: userData } = await supabase
-    .from("auth_user_profiles")
+    .from("auth_user_profile")
     .select("role")
     .eq("id", user.id)
     .single();
@@ -63,7 +63,7 @@ export default async function InvestorStatementsPage() {
       {userOrgs && userOrgs.length > 0 && (
         <div className="mb-8 space-y-8">
           <h2 className="text-2xl font-semibold">Your Individual Statements</h2>
-          <InvestorStatementsList investorId={contactData?.id} />
+          <InvestorStatementsList investorId={authUserProfile?.id} />
 
           <h2 className="text-2xl font-semibold mt-12">
             Your Organization Statements
@@ -81,7 +81,7 @@ export default async function InvestorStatementsPage() {
       {/* If user doesn't belong to organizations or is admin, show a single statements view */}
       {(!userOrgs || userOrgs.length === 0 || isAdmin) && (
         <InvestorStatementsList
-          investorId={isInvestor ? contactData?.id : undefined}
+          investorId={isInvestor ? authUserProfile?.id : undefined}
         />
       )}
     </div>

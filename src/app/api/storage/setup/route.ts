@@ -1,4 +1,4 @@
-import { createServiceRoleClient } from "@/lib/supabase";
+import { createServiceRoleClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 
 /**
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     }
 
     const documentsBucketExists = buckets?.some(
-      (bucket) => bucket.name === "documents"
+      (bucket: { name: string }) => bucket.name === "documents"
     );
 
     // Create the bucket if it doesn't exist

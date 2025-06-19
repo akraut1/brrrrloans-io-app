@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Download, Plus, Search, BarChart, FileText } from "lucide-react";
-import { createClerkSupabaseClient } from "@/lib/supabase";
+import { useSupabase } from "@/hooks/use-supabase";
 import { useUser } from "@/hooks/use-clerk-auth";
 import type { Tables } from "@/types/supabase";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -75,6 +75,7 @@ export default function DocumentsPage() {
   const [selectedFrequency, setSelectedFrequency] = useState("All Frequencies");
   const [searchStatements, setSearchStatements] = useState("");
   const { user } = useUser();
+  const supabase = useSupabase();
 
   // Fetch documents from Supabase
   const fetchDocuments = useCallback(async () => {
@@ -82,8 +83,6 @@ export default function DocumentsPage() {
 
     setIsLoading(true);
     try {
-      const supabase = createClerkSupabaseClient();
-
       // Start with a query that filters by the current user's ID
       // RLS will enforce this anyway, but it's good practice to be explicit
       let query = supabase
@@ -131,7 +130,7 @@ export default function DocumentsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, selectedCategory, selectedDeal]);
+  }, [user, selectedCategory, selectedDeal, supabase]);
 
   // Fetch investor statements
   const fetchStatements = useCallback(async () => {
@@ -139,9 +138,6 @@ export default function DocumentsPage() {
 
     setIsStatementsLoading(true);
     try {
-      // Use the Supabase client directly for authenticated queries
-      const supabase = createClerkSupabaseClient();
-
       // Get the user's contact ID (for investor role check)
       const { data: contactData } = await supabase
         .from("contact")
@@ -151,7 +147,7 @@ export default function DocumentsPage() {
 
       // Get user profile to check role
       const { data: authUserProfiles } = await supabase
-        .from("auth_user_profiles")
+        .from("auth_user_profile")
         .select("role")
         .eq("id", Number(user.id))
         .single();
@@ -217,7 +213,7 @@ export default function DocumentsPage() {
     } finally {
       setIsStatementsLoading(false);
     }
-  }, [user]);
+  }, [user, supabase]);
 
   useEffect(() => {
     if (user) {
@@ -249,7 +245,6 @@ export default function DocumentsPage() {
   const handleStatementDownload = async (statement: InvestorStatement) => {
     try {
       if (statement.file_path) {
-        const supabase = createClerkSupabaseClient();
         const { data, error } = await supabase.storage
           .from("investor-statements")
           .download(statement.file_path);

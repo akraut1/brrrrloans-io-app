@@ -19,6 +19,7 @@ export async function createDeal(formData: FormData) {
   const startDate = formData.get("startDate");
   const status = formData.get("status") ?? "Active";
 
+  // Input validation
   if (
     typeof name !== "string" ||
     typeof type !== "string" ||
@@ -30,47 +31,88 @@ export async function createDeal(formData: FormData) {
     throw new Error("Missing required fields");
   }
 
+  // Validate inputs
+  if (!name.trim() || name.length > 255) {
+    throw new Error("Deal name must be between 1 and 255 characters");
+  }
+
+  // Validate amount format
+  const cleanAmount = amount.replace(/[$,\s]/g, "");
+  if (!/^\d+(\.\d{1,2})?$/.test(cleanAmount)) {
+    throw new Error("Invalid amount format");
+  }
+
+  // Validate ROI format
+  if (!/^\d+(\.\d{1,2})?$/.test(roi)) {
+    throw new Error("Invalid ROI format");
+  }
+
+  // Validate date format
+  if (isNaN(Date.parse(startDate))) {
+    throw new Error("Invalid start date");
+  }
+
   try {
     const supabase = await getSupabaseClient();
 
-    // Generate a deal ID
-    const dealId = `DEAL-${Math.floor(100000 + Math.random() * 900000)}`;
+    // 1. Find the user's contact_id via auth_user_profile
+    const { data: userProfile, error: userProfileError } = await supabase
+      .from("auth_user_profile")
+      .select("email")
+      .eq("clerk_id", userId)
+      .single();
 
-    // Parse amount to remove currency symbol and commas
-    const cleanAmount = amount.replace(/[$,]/g, "");
-
-    // Insert deal record
-    const { error } = await supabase.from("deal").insert({
-      deal_name: name,
-      type,
-      amount: cleanAmount,
-      location,
-      description,
-      roi,
-      start_date: startDate,
-      status,
-      created_at: new Date().toISOString(),
-    });
-
-    if (error) {
-      throw new Error(error.message);
+    if (userProfileError || !userProfile) {
+      throw new Error("User profile not found");
     }
 
-    // Add the current user as a contact for this deal (assuming they're an admin/owner)
-    const { error: contactError } = await supabase.from("deal_roles").insert({
-      deal_id: Number(dealId),
-      contact_id: Number(userId),
+    // 2. Find the contact_id using the email
+    const { data: contact, error: contactError } = await supabase
+      .from("contact")
+      .select("id")
+      .eq("email_address", userProfile.email)
+      .single();
+
+    if (contactError || !contact) {
+      throw new Error("Contact not found for user");
+    }
+
+    // Insert deal record (let database auto-generate ID)
+    const { data: dealData, error: dealError } = await supabase
+      .from("deal")
+      .insert({
+        deal_name: name.trim(),
+        type,
+        amount: parseFloat(cleanAmount),
+        location: location.trim(),
+        description: typeof description === "string" ? description.trim() : null,
+        roi: parseFloat(roi),
+        start_date: startDate,
+        status,
+        created_at: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
+
+    if (dealError) {
+      throw new Error(`Failed to create deal: ${dealError.message}`);
+    }
+
+    // Add the current user as an owner for this deal using the correct contact_id
+    const { error: contactError2 } = await supabase.from("deal_roles").insert({
+      deal_id: dealData.id,
+      contact_id: contact.id,
       role: "Owner",
       created_at: new Date().toISOString(),
     });
 
-    if (contactError) {
-      console.error("Error adding contact to deal:", contactError);
+    if (contactError2) {
+      console.error("Error adding contact to deal:", contactError2);
       // Continue anyway as the deal was created
     }
 
     revalidatePath("/dashboard/deals");
-    return { success: true, dealId };
+    return { success: true, dealId: dealData.id };
   } catch (error) {
     console.error("Error creating deal:", error);
     throw error;
@@ -106,30 +148,88 @@ export async function updateDeal(formData: FormData) {
     throw new Error("Missing required fields");
   }
 
+  // Validate inputs
+  if (!name.trim() || name.length > 255) {
+    throw new Error("Deal name must be between 1 and 255 characters");
+  }
+
+  // Validate amount format
+  const cleanAmount = amount.replace(/[$,\s]/g, "");
+  if (!/^\d+(\.\d{1,2})?$/.test(cleanAmount)) {
+    throw new Error("Invalid amount format");
+  }
+
+  // Validate ROI format
+  if (!/^\d+(\.\d{1,2})?$/.test(roi)) {
+    throw new Error("Invalid ROI format");
+  }
+
+  // Validate date format
+  if (isNaN(Date.parse(startDate))) {
+    throw new Error("Invalid start date");
+  }
+
+  const dealId = parseInt(id, 10);
+  if (isNaN(dealId)) {
+    throw new Error("Invalid deal ID");
+  }
+
   try {
     const supabase = await getSupabaseClient();
 
-    // Parse amount to remove currency symbol and commas
-    const cleanAmount = amount.replace(/[$,]/g, "");
+    // 1. Find the user's contact_id via auth_user_profile
+    const { data: userProfile, error: userProfileError } = await supabase
+      .from("auth_user_profile")
+      .select("email")
+      .eq("clerk_id", userId)
+      .single();
+
+    if (userProfileError || !userProfile) {
+      throw new Error("User profile not found");
+    }
+
+    // 2. Find the contact_id using the email
+    const { data: contact, error: contactError } = await supabase
+      .from("contact")
+      .select("id")
+      .eq("email_address", userProfile.email)
+      .single();
+
+    if (contactError || !contact) {
+      throw new Error("Contact not found for user");
+    }
+
+    // 3. Check if the user has permission to update this deal
+    const { data: dealRole, error: checkError } = await supabase
+      .from("deal_roles")
+      .select("*")
+      .eq("deal_id", dealId)
+      .eq("contact_id", contact.id)
+      .eq("role", "Owner")
+      .single();
+
+    if (checkError || !dealRole) {
+      throw new Error("You don't have permission to update this deal");
+    }
 
     // Update deal record
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from("deal")
       .update({
-        deal_name: name,
+        deal_name: name.trim(),
         type,
-        amount: cleanAmount,
-        location,
-        description,
-        roi,
+        amount: parseFloat(cleanAmount),
+        location: location.trim(),
+        description: typeof description === "string" ? description.trim() : null,
+        roi: parseFloat(roi),
         start_date: startDate,
         status,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", Number(id));
+      .eq("id", dealId);
 
-    if (error) {
-      throw new Error(error.message);
+    if (updateError) {
+      throw new Error(`Failed to update deal: ${updateError.message}`);
     }
 
     revalidatePath("/dashboard/deals");
@@ -146,27 +246,57 @@ export async function deleteDeal(id: string) {
     throw new Error("Unauthorized");
   }
 
+  const dealId = parseInt(id, 10);
+  if (isNaN(dealId)) {
+    throw new Error("Invalid deal ID");
+  }
+
   try {
     const supabase = await getSupabaseClient();
 
-    // Check if the user has permission to delete this deal
-    const { data: dealContact, error: checkError } = await supabase
+    // 1. Find the user's contact_id via auth_user_profile
+    const { data: userProfile, error: userProfileError } = await supabase
+      .from("auth_user_profile")
+      .select("email")
+      .eq("clerk_id", userId)
+      .single();
+
+    if (userProfileError || !userProfile) {
+      throw new Error("User profile not found");
+    }
+
+    // 2. Find the contact_id using the email
+    const { data: contact, error: contactError } = await supabase
+      .from("contact")
+      .select("id")
+      .eq("email_address", userProfile.email)
+      .single();
+
+    if (contactError || !contact) {
+      throw new Error("Contact not found for user");
+    }
+
+    // 3. Check if the user has permission to delete this deal
+    const { data: dealRole, error: checkError } = await supabase
       .from("deal_roles")
       .select("*")
-      .eq("deal_id", Number(id))
-      .eq("contact_id", Number(userId))
+      .eq("deal_id", dealId)
+      .eq("contact_id", contact.id)
       .eq("role", "Owner")
       .single();
 
-    if (checkError || !dealContact) {
+    if (checkError || !dealRole) {
       throw new Error("You don't have permission to delete this deal");
     }
 
     // Delete the deal
-    const { error } = await supabase.from("deal").delete().eq("id", Number(id));
+    const { error: deleteError } = await supabase
+      .from("deal")
+      .delete()
+      .eq("id", dealId);
 
-    if (error) {
-      throw new Error(error.message);
+    if (deleteError) {
+      throw new Error(`Failed to delete deal: ${deleteError.message}`);
     }
 
     revalidatePath("/dashboard/deals");
