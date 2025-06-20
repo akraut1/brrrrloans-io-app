@@ -1,85 +1,81 @@
 "use client";
 
-import { UserButton } from "@/components/auth/clerk-components";
-import Image from "next/image";
-import Link from "next/link";
-import { useTheme } from "next-themes";
+import * as React from "react";
+import { OrganizationSwitcher } from "@/components/auth/clerk-components";
 import { usePathname } from "next/navigation";
-import {
-  Building,
-  Home,
-  FileText,
-  File,
-  Search,
-  Sun,
-  Moon,
-  Laptop,
-  DollarSign,
-  BarChart,
-} from "lucide-react";
+import { Building, Home, FileText, File, DollarSign } from "lucide-react";
+import { NavAI } from "./nav-ai";
+import { NavMain } from "./nav-main";
+import { NavDocuments } from "./nav-documents";
+import { NavUser } from "./nav-user";
 
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
-  SidebarInput,
 } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 
 export function AppSidebar(
   props: React.ComponentPropsWithoutRef<typeof Sidebar>
 ) {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
 
-  const routes = [
+  const mainNavItems = [
     {
-      href: "/dashboard",
-      label: "Dashboard",
+      title: "Dashboard",
+      url: "/dashboard",
       icon: Home,
       isActive: pathname === "/dashboard",
     },
     {
-      href: "/dashboard/deals",
-      label: "Deals",
+      title: "Deals",
+      url: "/dashboard/deals",
       icon: Building,
       isActive: pathname.startsWith("/dashboard/deals"),
     },
     {
-      href: "/dashboard/distributions",
-      label: "Distributions",
+      title: "Distributions",
+      url: "/dashboard/distributions",
       icon: DollarSign,
       isActive: pathname.startsWith("/dashboard/distributions"),
     },
     {
-      href: "/dashboard/documents",
-      label: "Documents",
+      title: "Documents",
+      url: "/dashboard/documents",
       icon: File,
       isActive:
         pathname.startsWith("/dashboard/documents") ||
         pathname.startsWith("/dashboard/investor-statements"),
     },
     {
-      href: "/dashboard/reports",
-      label: "Reports",
+      title: "Reports",
+      url: "/dashboard/reports",
       icon: FileText,
       isActive: pathname.startsWith("/dashboard/reports"),
+    },
+  ];
+
+  const documentItems = [
+    {
+      name: "Statements",
+      url: "/dashboard/documents",
+      icon: FileText,
+    },
+    {
+      name: "Reports",
+      url: "/dashboard/reports",
+      icon: File,
+    },
+    {
+      name: "More",
+      icon: File,
+      disabled: true,
     },
   ];
 
@@ -91,101 +87,50 @@ export function AppSidebar(
       {...props}
     >
       <SidebarHeader>
-        <div className="flex items-center justify-between gap-2 px-2">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/logos/brrrr-icon-sq-black-192.png"
-              alt="Brrrr Loans Logo"
-              width={24}
-              height={24}
-              className="block dark:hidden"
-            />
-            <Image
-              src="/logos/brrrr-icon-sq-white-192.png"
-              alt="Brrrr Loans Logo"
-              width={24}
-              height={24}
-              className="hidden dark:block"
-            />
-            <span className="font-medium">Lender Portal</span>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-                <DropdownMenuRadioItem value="light">
-                  <Sun className="mr-2 h-4 w-4" />
-                  <span>Light</span>
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="dark">
-                  <Moon className="mr-2 h-4 w-4" />
-                  <span>Dark</span>
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="system">
-                  <Laptop className="mr-2 h-4 w-4" />
-                  <span>System</span>
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <SidebarSeparator />
-        <div className="px-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <SidebarInput
-              type="search"
-              placeholder="Search..."
-              className="pl-8"
-            />
-          </div>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {routes.map((route) => (
-                <SidebarMenuItem key={route.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={route.isActive}
-                    tooltip={route.label}
-                  >
-                    <Link href={route.href}>
-                      <route.icon />
-                      <span>{route.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
-        <SidebarSeparator />
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center justify-between px-2">
-              <UserButton
-                afterSignOutUrl="/sign-in"
+            <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground [&_.cl-organizationSwitcherTrigger]:!flex [&_.cl-organizationSwitcherTrigger]:!items-center [&_.cl-organizationSwitcherTrigger]:!gap-2 [&_.cl-organizationSwitcherTrigger]:!w-full [&_.cl-organizationSwitcherTrigger]:!justify-start [&_.cl-organizationPreview]:!flex [&_.cl-organizationPreview]:!items-center [&_.cl-organizationPreview]:!gap-2 [&_.cl-organizationPreview]:!w-full [&_.cl-organizationPreview]:!justify-start [&_.cl-organizationPreviewAvatarBox]:!order-first [&_.cl-organizationPreviewAvatarBox]:!mr-2"
+            >
+              <OrganizationSwitcher
                 appearance={{
                   elements: {
-                    avatarBox: "h-8 w-8",
+                    organizationSwitcherTrigger:
+                      "flex items-center gap-2 w-full h-full p-0 border-0 bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent justify-start",
+                    organizationPreview:
+                      "flex items-center gap-2 w-full justify-start",
+                    organizationSwitcherTriggerIcon: "hidden",
+                    organizationSwitcherPopoverCard:
+                      "w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg",
+                    organizationPreviewAvatarBox:
+                      "h-8 w-8 rounded-lg shrink-0 order-first",
+                    organizationPreviewAvatarImage:
+                      "aspect-square h-full w-full rounded-lg",
+                    organizationPreviewMainIdentifier:
+                      "grid flex-1 text-left text-sm leading-tight ml-2",
+                    organizationPreviewTextContainer:
+                      "truncate font-semibold text-left",
+                    organizationPreviewSecondaryIdentifier:
+                      "truncate text-xs text-muted-foreground text-left",
                   },
                 }}
               />
-            </div>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarSeparator />
+
+      <SidebarContent>
+        <NavAI />
+        <NavMain items={mainNavItems} />
+        <NavDocuments items={documentItems} />
+      </SidebarContent>
+
+      <SidebarFooter>
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

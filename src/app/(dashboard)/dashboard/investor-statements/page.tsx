@@ -1,4 +1,4 @@
-import { InvestorStatementsList } from "@/components/dashboard/investor-statements-table";
+import { InvestorStatementsList } from "@/components/dashboard/bsi-statements-table";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";

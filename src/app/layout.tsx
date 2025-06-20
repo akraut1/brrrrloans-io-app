@@ -1,9 +1,15 @@
 import type { ReactNode } from "react";
-import { ClerkProvider } from "@clerk/nextjs";
+import type { Metadata } from "next";
+import {
+  ClerkProvider,
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { RootLayoutClient } from "@/components/layout";
 
@@ -13,6 +19,22 @@ export const metadata: Metadata = {
   title: "BL1 OS",
   description: "Brrrr Loans 1 OS",
 };
+
+function Header() {
+  return (
+    <header
+      style={{ display: "flex", justifyContent: "space-between", padding: 20 }}
+    >
+      <h1>Sign In</h1>
+      <SignedIn>
+        <UserButton />
+      </SignedIn>
+      <SignedOut>
+        <SignInButton />
+      </SignedOut>
+    </header>
+  );
+}
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

@@ -64,7 +64,7 @@ export default function DistributionsPage() {
     const dealName =
       (d as { deal?: { deal_name?: string } }).deal?.deal_name ?? "";
     return {
-      id: d.id,
+      id: d.id.toString(),
       dealName,
       type: "", // Add mapping if you have a type field
       amount: d.deposit_amount?.toString() ?? "",
