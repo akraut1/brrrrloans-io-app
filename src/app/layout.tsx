@@ -17,7 +17,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "BL1 OS",
-  description: "Brrrr Loans 1 OS",
+  description: "BL1 Loan Origination System",
 };
 
 function Header() {
