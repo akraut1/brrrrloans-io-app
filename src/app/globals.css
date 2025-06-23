@@ -122,6 +122,7 @@
   .cl-organization-switcher {
     color: hsl(var(--foreground));
   }
+
   .clerk-social-buttons {
     gap: 16px;
   }

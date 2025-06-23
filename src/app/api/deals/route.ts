@@ -62,7 +62,7 @@ export async function GET(request: Request) {
       .select(
         `
         *,
-        deal:deal_id(*)
+        deal!bsi_deals_deal_id_fkey(*)
       `
       )
       .eq("contact_id", Number(contact.id ?? 0));

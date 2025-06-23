@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/table";
 import { useSupabase } from "@/hooks/use-supabase";
 import { useUser } from "@/hooks/use-clerk-auth";
-import { LoadingAuth } from "@/components/loading-auth";
+import { LoadingAuth } from "@/components/auth/loading-auth";
 
 // Define the form schema with validation
 const formSchema = z.object({
