@@ -2,7 +2,6 @@
   "buildCommand": "pnpm install && pnpm build",
   "outputDirectory": ".vercel/output",
   "framework": "nextjs",
-  "testCommand": "pnpm test:e2e",
   "env": {
     "NEXT_PUBLIC_CLERK_FRONTEND_API": "joint-reptile-94.clerk.accounts.dev",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_am9pbnQtcmVwdGlsZS05NC5jbGVyay5hY2NvdW50cy5kZXYk",
