@@ -11,7 +11,6 @@ export default function Page() {
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Dashboard</span>
             <span className="mx-1">/</span>
-            <span className="font-semibold">Overview</span>
           </div>
         }
       />

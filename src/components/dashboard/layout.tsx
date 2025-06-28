@@ -4,7 +4,6 @@ import type React from "react";
 import { useAuth } from "@/hooks/use-clerk-auth";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { DataTable } from "@/components/ui/data-table";
-import { SectionCards } from "@/components/section-cards";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 

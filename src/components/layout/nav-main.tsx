@@ -24,7 +24,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Loan Production</SidebarGroupLabel>
+      <SidebarGroupLabel>Originations</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => (

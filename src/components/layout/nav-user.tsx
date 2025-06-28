@@ -19,18 +19,16 @@ export function NavUser() {
               elements: {
                 userButtonBox: "flex items-center w-full h-full",
                 userButtonTrigger:
-                  "flex items-center w-full h-full p-0 border-0 bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent",
+                  "flex items-center w-full h-full p-0 border-0 bg-transparent hover:bg-sidebar-accent focus:bg-sidebar-accent rounded-md transition-colors",
                 userButtonAvatarBox:
-                  "h-8 w-8 rounded-lg shrink-0 order-first mr-2",
-                userButtonAvatarImage:
-                  "aspect-square h-full w-full rounded-lg",
-                userButtonOuterBox: "flex items-center w-full gap-2",
-                userButtonInner:
-                  "flex flex-col justify-start items-start text-left leading-tight gap-0.5 ml-2",
+                  "h-8 w-8 rounded-lg shrink-0 mr-3 order-first",
+                userButtonAvatarImage: "h-8 w-8 rounded-lg",
+                userButtonOuterBox: "flex items-center w-full",
+                userButtonInner: "grid flex-1 text-left text-sm leading-tight",
                 userButtonIdentifier__username:
-                  "truncate font-semibold text-sm text-left block",
+                  "truncate font-semibold text-sm",
                 userButtonIdentifier__emailAddress:
-                  "truncate text-xs text-muted-foreground text-left block",
+                  "truncate text-xs text-muted-foreground",
               },
             }}
           />

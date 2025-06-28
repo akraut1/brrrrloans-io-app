@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { DealDetailsWrapper } from "@/components/deals/protected-deal-details";
@@ -8,19 +10,20 @@ import { notFound } from "next/navigation";
 import type { Database } from "@/types/supabase";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function DealPage({ params }: PageProps) {
+  const { id } = await params;
   const supabase = createServerComponentClient<Database>({ cookies });
 
   // Fetch basic deal data
   const { data: deal, error } = await supabase
     .from("deal")
     .select("*")
-    .eq("id", parseInt(params.id))
+    .eq("id", parseInt(id))
     .single();
 
   if (error || !deal) {
@@ -29,7 +32,7 @@ export default async function DealPage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <DealDetailsWrapper dealId={params.id} deal={deal} />
+      <DealDetailsWrapper dealId={id} deal={deal} />
 
       <Tabs defaultValue="documents" className="w-full">
         <TabsList>
@@ -38,11 +41,11 @@ export default async function DealPage({ params }: PageProps) {
         </TabsList>
 
         <TabsContent value="documents">
-          <DocumentsListWrapper dealId={params.id} />
+          <DocumentsListWrapper dealId={id} />
         </TabsContent>
 
         <TabsContent value="distributions">
-          <DistributionsListWrapper dealId={params.id} />
+          <DistributionsListWrapper dealId={id} />
         </TabsContent>
       </Tabs>
     </div>

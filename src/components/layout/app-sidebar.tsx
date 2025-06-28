@@ -3,7 +3,14 @@
 import * as React from "react";
 import { OrganizationSwitcher } from "@/components/auth/clerk-components";
 import { usePathname } from "next/navigation";
-import { Building, Home, FileText, File, DollarSign } from "lucide-react";
+import {
+  Building,
+  Home,
+  Files,
+  FileBarChart2,
+  LineChart,
+  CircleDollarSign,
+} from "lucide-react";
 import { NavAI } from "./nav-ai";
 import { NavMain } from "./nav-main";
 import { NavDocuments } from "./nav-documents";
@@ -42,22 +49,8 @@ export function AppSidebar(
     {
       title: "Distributions",
       url: "/dashboard/distributions",
-      icon: DollarSign,
+      icon: CircleDollarSign,
       isActive: pathname.startsWith("/dashboard/distributions"),
-    },
-    {
-      title: "Documents",
-      url: "/dashboard/documents",
-      icon: File,
-      isActive:
-        pathname.startsWith("/dashboard/documents") ||
-        pathname.startsWith("/dashboard/investor-statements"),
-    },
-    {
-      title: "Reports",
-      url: "/dashboard/reports",
-      icon: FileText,
-      isActive: pathname.startsWith("/dashboard/reports"),
     },
   ];
 
@@ -65,17 +58,12 @@ export function AppSidebar(
     {
       name: "Statements",
       url: "/dashboard/documents",
-      icon: FileText,
+      icon: FileBarChart2,
     },
     {
       name: "Reports",
       url: "/dashboard/reports",
-      icon: File,
-    },
-    {
-      name: "More",
-      icon: File,
-      disabled: true,
+      icon: LineChart,
     },
   ];
 
@@ -91,7 +79,7 @@ export function AppSidebar(
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground [&_.cl-organizationSwitcherTrigger]:!flex [&_.cl-organizationSwitcherTrigger]:!items-center [&_.cl-organizationSwitcherTrigger]:!gap-2 [&_.cl-organizationSwitcherTrigger]:!w-full [&_.cl-organizationSwitcherTrigger]:!justify-start [&_.cl-organizationPreview]:!flex [&_.cl-organizationPreview]:!items-center [&_.cl-organizationPreview]:!gap-2 [&_.cl-organizationPreview]:!w-full [&_.cl-organizationPreview]:!justify-start [&_.cl-organizationPreviewAvatarBox]:!order-first [&_.cl-organizationPreviewAvatarBox]:!mr-2"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <OrganizationSwitcher
                 appearance={{
