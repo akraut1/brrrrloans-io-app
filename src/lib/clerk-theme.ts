@@ -45,7 +45,7 @@ const commonElementOverrides = {
   footerActionLink:
     "text-primary hover:text-primary/90 hover:underline transition-colors",
   socialButtons: "clerk-social-buttons",
-  cardBox: "shadow-none border-none outline-none",
+  cardBox: "shadow-sm border border-border",
 };
 
 // Tailor appearance objects for specific components

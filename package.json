@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright install --with-deps && playwright test"
   },
   "dependencies": {
     "@builder.io/dev-tools": "^1.6.121",
@@ -71,6 +73,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.53.1",
     "@svgr/cli": "^8.1.0",
     "@types/node": "^20",
     "@types/react": "^19.1.0",

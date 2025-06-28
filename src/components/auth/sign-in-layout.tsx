@@ -1,9 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AuthCarousel } from "@/components/auth/auth-carousel";
 import { ThemeDropdown } from "@/components/theme/theme-dropdown";
-import { MagicCarousel2Example } from "@/components/ui/magic-carousel-2-example";
 import type { ReactNode } from "react";
 
 interface SignInLayoutProps {
@@ -22,7 +20,11 @@ export function SignInLayout({ children }: SignInLayoutProps) {
       <div className="relative items-center justify-center px-6 py-24 md:flex md:w-1/2">
         {/* Logo */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 md:left-4 md:translate-x-0">
-          <a href="#" className="flex items-center gap-2 font-medium">
+          <a
+            href="/dashboard"
+            aria-label="Go to dashboard"
+            className="flex items-center gap-2 font-medium"
+          >
             <div className="flex h-8 w-8 items-center justify-center">
               <Image
                 src="/logos/brrrr-icon-sq-black-192.png"
