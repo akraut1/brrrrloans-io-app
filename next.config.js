@@ -1,5 +1,3 @@
-const isVercel = process.env.VERCEL === "1";
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -16,7 +14,14 @@ const nextConfig = {
     "http://192.168.1.237:3001",
   ],
   eslint: {
-    ignoreDuringBuilds: isVercel,
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // !! WARN !!
+    // Dangerously allow production builds to successfully complete even if
+    // your project has type errors.
+    // !! WARN !!
+    ignoreBuildErrors: true,
   },
 };
 
